@@ -42,7 +42,7 @@ html,body{margin:0;background:var(--bg);color:var(--ink);
 
 .top{display:flex;justify-content:space-between;align-items:flex-end;margin:6px 4px 16px}
 .top h1{margin:0;font-size:34px;letter-spacing:-.5px}
-.top .sub{color:var(--muted);font-size:15px;margin-top:2px;text-transform:capitalize}
+.top .sub{color:var(--muted);font-size:15px;margin-top:2px}
 .clock{font-size:30px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.5px}
 .sim{display:inline-block;font-size:12px;background:#ff9f0a;color:#000;border-radius:8px;padding:2px 6px;margin-left:6px;vertical-align:middle}
 
@@ -81,7 +81,7 @@ html,body{margin:0;background:var(--bg);color:var(--ink);
 .tabs{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:center;
   padding:8px 10px calc(env(safe-area-inset-bottom) + 6px);background:var(--bar);
   -webkit-backdrop-filter:saturate(180%) blur(22px);backdrop-filter:saturate(180%) blur(22px);border-top:1px solid var(--line);z-index:5}
-.tabs div{display:flex;width:100%;max-width:560px}
+.tabs > div{display:flex;width:100%;max-width:560px}
 .tab{flex:1;text-align:center;font-size:11px;font-weight:600;color:var(--muted);padding:4px 0;border-radius:14px;cursor:pointer;user-select:none}
 .tab span{display:block;font-size:24px;line-height:1.2;transition:transform .2s}
 .tab.on{color:var(--ink)}
@@ -158,6 +158,56 @@ html,body{margin:0;background:var(--bg);color:var(--ink);
 .enter{animation:in .35s ease}
 @keyframes in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 .foot{text-align:center;color:var(--muted);font-size:12px;margin-top:22px}
+
+/* ===== iPad / ecrãs largos (o iPhone fica igual) ===== */
+@media (min-width: 700px){
+  #app{max-width:720px;padding-left:24px;padding-right:24px}
+  .top h1{font-size:42px}
+  .top .sub{font-size:17px}
+  .clock{font-size:38px}
+  .card{padding:22px 22px 18px;border-radius:32px}
+  .card .who{font-size:22px}
+  .big{font-size:32px}
+  .when{font-size:19px}
+  .next{font-size:16px}
+  .panel{padding:20px}
+  .panel h3{font-size:20px}
+  .rank{font-size:18px}
+  .hero{padding:22px}
+  .hero h2{font-size:36px}
+  .seg button{font-size:17px;padding:11px}
+  .it .box b{font-size:19px}
+  .it .box span{font-size:15px}
+  .it .tm{width:58px;font-size:14px}
+  .dh{font-size:18px}
+  .r{font-size:17px}
+  .r .h{width:110px;font-size:14px}
+  .exs{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+  .exs .ex{margin-bottom:0}
+  .week{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;align-items:start}
+  .week .day{margin-bottom:0}
+  .tabs > div{max-width:720px}
+  .tab{font-size:13px}
+  .tab span{font-size:28px}
+  .ov{align-items:center}
+  .sh{border-radius:26px;max-width:540px;max-height:88vh}
+}
+@media (min-width: 1000px){
+  #app{max-width:1120px}
+  .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;align-items:stretch}
+  .cards .card{margin-bottom:0;display:flex;flex-direction:column}
+  .cards .card .next{margin-top:auto;flex-direction:column;gap:4px}
+  .cards + .panel{margin-top:18px}
+  .duo{display:grid;grid-template-columns:minmax(340px,420px) 1fr;gap:20px;align-items:start}
+  .duo > div:first-child{position:sticky;top:16px}
+  .week{grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
+  .week .r{display:grid;grid-template-columns:1fr;gap:1px;padding:8px 0}
+  .week .r .h{width:auto;font-size:12.5px}
+  .week .r .n{font-size:15px}
+  .week .r .s{white-space:normal}
+  .week .dh{flex-direction:column;align-items:flex-start;gap:2px}
+  .tabs > div{max-width:900px}
+}
 </style>
 </head>
 <body>
@@ -359,6 +409,30 @@ const ATIV = {mad:[], car:[], joa:[]};   // extras de cada filho (guardados no t
 })();
 function guardarAtiv(){ guardar("atividades", JSON.stringify(ATIV)); }
 
+/* Extras já carregados de raiz (dias: 1=Seg 2=Ter 3=Qua 4=Qui 5=Sex 6=Sáb 0=Dom).
+   Entram uma só vez; depois podes editar ou apagar no separador Extras. */
+const EXTRAS_INICIAIS = {
+  joa:[ {nome:"Surf",     emoji:"🏄", dias:[1],     ini:"16:00", fim:"19:00", local:"Green Wave"},
+        {nome:"Futebol",  emoji:"⚽", dias:[2],     ini:"18:30", fim:"19:45", local:"Clube Futebol Benfica"},
+        {nome:"Futebol",  emoji:"⚽", dias:[4],     ini:"19:15", fim:"20:30", local:"Clube Futebol Benfica"},
+        {nome:"Futebol",  emoji:"⚽", dias:[5],     ini:"19:00", fim:"20:30", local:"Clube Futebol Benfica"},
+        {nome:"Explicação",emoji:"📚", dias:[3],     ini:"16:00", fim:"17:00", local:""} ],
+  car:[ {nome:"Ginástica",emoji:"🤸", dias:[1,3,5], ini:"17:00", fim:"18:30", local:""} ]
+};
+const VERSAO_EXTRAS = "4";
+if (ler("extras_iniciais","") !== VERSAO_EXTRAS){
+  // a explicação da Carolina (terça) foi retirada
+  ATIV.car = ATIV.car.filter(function(y){ return !(y.nome === "Explicação" && y.dias.join() === "2" && ((y.ini === "14:00" && y.fim === "15:00") || (y.ini === "15:00" && y.fim === "16:00"))); });
+  // versão 1 tinha o futebol igual nos 3 dias: é substituída pelos horários certos
+  ATIV.joa = ATIV.joa.filter(function(y){ return !(y.nome === "Futebol" && y.dias.join() === "2,4,5" && y.ini === "18:30" && y.fim === "20:30"); });
+  Object.keys(EXTRAS_INICIAIS).forEach(function(k){
+    EXTRAS_INICIAIS[k].forEach(function(x){
+      if (!ATIV[k].some(function(y){ return y.nome === x.nome && y.dias.join() === x.dias.join(); })) ATIV[k].push(x);
+    });
+  });
+  guardarAtiv(); guardar("extras_iniciais",VERSAO_EXTRAS);
+}
+
 function agora(){
   const n = new Date();
   let d = n.getDay(), t = n.getHours()*60 + n.getMinutes(), sim = false;
@@ -439,7 +513,7 @@ function ecraHoje(a){
   let html = '<div class="top"><div><h1>Horários</h1><div class="sub">'+h+' · '+
     (a.sim ? DIAS[a.d] : a.date.toLocaleDateString("pt-PT",{weekday:"long",day:"numeric",month:"long"}))+
     (a.sim ? '<span class="sim">simulação</span>' : '')+'</div></div><div class="clock">'+hhmm(a.t)+'</div></div>';
-  html += est.map(x => cartao(x.f, x.e, a.t)).join("");
+  html += '<div class="cards">'+est.map(x => cartao(x.f, x.e, a.t)).join("")+'</div>';
 
   if (a.d >= 1 && a.d <= 5){
     const com = est.filter(x => x.e.fimHoje).sort((x,y) => min(x.e.fimHoje) - min(y.e.fimHoje));
@@ -485,7 +559,7 @@ function ecraFilho(f, a){
   }
 
   if (sb === "hoje"){
-    html += cartao(f, e, a.t);
+    html += '<div class="duo"><div>'+cartao(f, e, a.t)+'</div><div>';
     const itens = itensDoDia(f, dia, sm, lista);
     html += '<div class="hint">'+(eHoje ? "O dia de hoje" : "Segunda-feira, para ir espreitando")+' · '+DIAS[dia]+'</div><div class="tl '+f.cls+'">';
     if (!itens.length) html += '<div class="panel">😴 Sem aulas neste dia.</div>';
@@ -506,8 +580,9 @@ function ecraFilho(f, a){
           '<span>'+(d.sala ? "Sala "+d.sala : "")+'</span></div></div>';
       }
     }
-    html += '</div>';
+    html += '</div></div></div>';
   } else if (sb === "semana"){
+    html += '<div class="week">';
     for (const d of ORDEM_DIAS){
       const at = ativsDoDia(lista, d);
       if ((d === 6 || d === 0) && !at.length) continue;
@@ -534,15 +609,17 @@ function ecraFilho(f, a){
       }
       html += '</div></div>';
     }
+    html += '</div>';
   } else {
     html += '<div class="hint">Coisas que se repetem todas as semanas: explicações, desporto, música…</div>';
     if (!lista.length) html += '<div class="panel">Ainda não há extras. ⚽ Futebol? 📚 Explicação? 🤸 Ginástica?</div>';
+    html += '<div class="exs">';
     lista.forEach(function(x, i){
       html += '<div class="ex '+f.cls+'"><div class="exi">'+esc(x.emoji)+'</div><div class="exm"><b>'+esc(x.nome)+'</b><span>'+
         diasTxt(x.dias)+' · '+x.ini+'–'+x.fim+(x.local ? ' · '+esc(x.local) : '')+'</span></div>'+
         '<button onclick="abrirForm(\''+f.id+'\','+i+')">✏️</button></div>';
     });
-    html += '<button class="add '+f.cls+'" onclick="abrirForm(\''+f.id+'\',-1)">＋ Adicionar extra</button>';
+    html += '</div><button class="add '+f.cls+'" onclick="abrirForm(\''+f.id+'\',-1)">＋ Adicionar extra</button>';
   }
   return html;
 }
