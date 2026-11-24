@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Horários">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f2f2f7">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<meta name="color-scheme" content="light dark">
+<title>Horários</title>
+<style>
+:root{
+  --bg:#f2f2f7; --ink:#1c1c1e; --muted:#6e6e73; --panel:#ffffff; --line:rgba(60,60,67,.14);
+  --bar:rgba(249,249,251,.82);
+  --mad-a:#d9f6e9; --mad-b:#b4ebd2; --mad-acc:#12a574;
+  --car-a:#f3e2fc; --car-b:#fdd5ea; --car-acc:#b04fd8;
+  --joa-a:#dcecff; --joa-b:#b9d8ff; --joa-acc:#2f80ed;
+  --green:#22c55e;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#000; --ink:#f5f5f7; --muted:#a1a1a6; --panel:#1c1c1e; --line:rgba(235,235,245,.14);
+    --bar:rgba(28,28,30,.82);
+    --mad-a:#123a2c; --mad-b:#1b5a44; --mad-acc:#4fe0aa;
+    --car-a:#38224d; --car-b:#5b2a48; --car-acc:#e0a0ff;
+    --joa-a:#16304f; --joa-b:#1f4a7d; --joa-acc:#7db8ff;
+  }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:ui-rounded,"SF Pro Rounded",-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased}
+#app{max-width:560px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 18px) 16px calc(env(safe-area-inset-bottom) + 110px)}
+.mad{--a:var(--mad-a);--b:var(--mad-b);--acc:var(--mad-acc)}
+.car{--a:var(--car-a);--b:var(--car-b);--acc:var(--car-acc)}
+.joa{--a:var(--joa-a);--b:var(--joa-b);--acc:var(--joa-acc)}
+
+.top{display:flex;justify-content:space-between;align-items:flex-end;margin:6px 4px 16px}
+.top h1{margin:0;font-size:34px;letter-spacing:-.5px}
+.top .sub{color:var(--muted);font-size:15px;margin-top:2px;text-transform:capitalize}
+.clock{font-size:30px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.5px}
+.sim{display:inline-block;font-size:12px;background:#ff9f0a;color:#000;border-radius:8px;padding:2px 6px;margin-left:6px;vertical-align:middle}
+
+.card{border-radius:28px;padding:18px 18px 16px;margin-bottom:14px;background:linear-gradient(135deg,var(--a),var(--b));
+  box-shadow:0 6px 18px rgba(0,0,0,.07);position:relative;overflow:hidden}
+.card .who{display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:19px}
+.card .who small{font-weight:500;opacity:.65;font-size:13px}
+.pill{display:inline-flex;align-items:center;gap:7px;margin:12px 0 8px;padding:5px 12px;border-radius:99px;
+  font-weight:800;font-size:13px;letter-spacing:.6px;background:rgba(255,255,255,.55);color:#1c1c1e}
+@media (prefers-color-scheme: dark){.pill{background:rgba(0,0,0,.32);color:#f5f5f7}}
+.pill.live{background:var(--green);color:#04210f}
+.dot{width:9px;height:9px;border-radius:50%;background:#04210f;animation:pulse 1.4s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(4,33,15,.5)}70%{box-shadow:0 0 0 8px rgba(4,33,15,0)}100%{box-shadow:0 0 0 0 rgba(4,33,15,0)}}
+.big{font-size:27px;font-weight:800;letter-spacing:-.4px;line-height:1.15}
+.when{font-size:17px;font-weight:600;margin-top:4px;opacity:.85;font-variant-numeric:tabular-nums}
+.prog{height:7px;border-radius:9px;background:rgba(0,0,0,.1);margin:12px 0 4px;overflow:hidden}
+@media (prefers-color-scheme: dark){.prog{background:rgba(255,255,255,.14)}}
+.prog i{display:block;height:100%;border-radius:9px;background:var(--acc);transition:width .8s}
+.left{font-size:13px;opacity:.7}
+.next{margin-top:12px;padding-top:11px;border-top:1px solid rgba(0,0,0,.09);display:flex;justify-content:space-between;gap:10px;font-size:15px}
+@media (prefers-color-scheme: dark){.next{border-top-color:rgba(255,255,255,.12)}}
+.next b{font-weight:700}
+.next .end{white-space:nowrap;opacity:.75}
+
+.panel{background:var(--panel);border-radius:24px;padding:16px;margin:4px 0 14px;box-shadow:0 2px 10px rgba(0,0,0,.05)}
+.panel h3{margin:0 0 10px;font-size:18px}
+.rank{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line);font-size:16px}
+.rank:first-of-type{border-top:0}
+.rank .m{font-size:22px;width:28px;text-align:center}
+.rank .t{flex:1}
+.rank .e{font-weight:700;font-variant-numeric:tabular-nums}
+.rank .s{font-size:18px}
+.hint{color:var(--muted);font-size:14px;margin:6px 4px}
+
+/* tab bar */
+.tabs{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:center;
+  padding:8px 10px calc(env(safe-area-inset-bottom) + 6px);background:var(--bar);
+  -webkit-backdrop-filter:saturate(180%) blur(22px);backdrop-filter:saturate(180%) blur(22px);border-top:1px solid var(--line);z-index:5}
+.tabs div{display:flex;width:100%;max-width:560px}
+.tab{flex:1;text-align:center;font-size:11px;font-weight:600;color:var(--muted);padding:4px 0;border-radius:14px;cursor:pointer;user-select:none}
+.tab span{display:block;font-size:24px;line-height:1.2;transition:transform .2s}
+.tab.on{color:var(--ink)}
+.tab.on span{transform:scale(1.18)}
+.tab.on.mad{color:var(--mad-acc)}.tab.on.car{color:var(--car-acc)}.tab.on.joa{color:var(--joa-acc)}
+
+/* child page */
+.hero{border-radius:28px;padding:18px;background:linear-gradient(135deg,var(--a),var(--b));margin-bottom:12px}
+.hero h2{margin:0;font-size:30px;letter-spacing:-.5px}
+.hero p{margin:4px 0 0;opacity:.7;font-size:15px}
+.seg{display:flex;background:var(--panel);border-radius:14px;padding:3px;margin:0 0 14px;box-shadow:0 1px 6px rgba(0,0,0,.05)}
+.seg button{flex:1;border:0;background:transparent;color:var(--ink);font:inherit;font-weight:700;font-size:15px;padding:9px;border-radius:11px;cursor:pointer}
+.seg button.on{background:linear-gradient(135deg,var(--a),var(--b))}
+.chips{display:flex;gap:8px;align-items:center;margin:0 2px 14px;font-size:14px;color:var(--muted);flex-wrap:wrap}
+.chips button{border:1px solid var(--line);background:var(--panel);color:var(--ink);font:inherit;font-size:13px;font-weight:700;padding:6px 12px;border-radius:99px;cursor:pointer}
+.chips button.on{background:var(--acc);color:#fff;border-color:transparent}
+@media (prefers-color-scheme: dark){.chips button.on{color:#000}}
+.note{background:rgba(255,159,10,.16);border:1px solid rgba(255,159,10,.4);border-radius:16px;padding:10px 12px;font-size:14px;margin-bottom:14px}
+
+.tl{position:relative;margin-left:2px}
+.it{display:flex;gap:12px;margin-bottom:10px;position:relative}
+.it .tm{width:50px;text-align:right;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;padding-top:14px;line-height:1.35}
+.it .box{flex:1;background:var(--panel);border-radius:18px;padding:12px 14px;border-left:6px solid var(--acc);box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.it .box b{font-size:17px;display:block}
+.it .box span{font-size:14px;color:var(--muted)}
+.it.past{opacity:.45}
+.it.now .box{background:linear-gradient(135deg,var(--a),var(--b));box-shadow:0 4px 14px rgba(0,0,0,.12)}
+.it.now .box span{color:inherit;opacity:.75}
+.it.almoco .box{border-left-color:var(--muted);background:transparent;box-shadow:none;border:1px dashed var(--line);border-left:6px solid var(--muted)}
+.tag{display:inline-block;font-size:11px;font-weight:800;background:var(--green);color:#04210f;padding:2px 7px;border-radius:8px;margin-left:6px;vertical-align:middle}
+
+.day{margin-bottom:12px}
+.day.hoje .dh{background:linear-gradient(135deg,var(--a),var(--b))}
+.dh{display:flex;justify-content:space-between;align-items:center;font-weight:800;font-size:16px;padding:9px 14px;border-radius:16px 16px 4px 4px;background:var(--panel)}
+.dh small{font-weight:600;color:var(--muted);font-size:13px}
+.day.hoje .dh small{color:inherit;opacity:.7}
+.rows{background:var(--panel);border-radius:4px 4px 16px 16px;padding:2px 14px}
+.r{display:flex;gap:10px;align-items:baseline;padding:9px 0;border-top:1px solid var(--line);font-size:15px}
+.r:first-child{border-top:0}
+.r .h{width:92px;color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums;flex-shrink:0}
+.r .n{flex:1;font-weight:600}
+.r .s{color:var(--muted);font-size:13px;white-space:nowrap}
+.r.al .n{color:var(--muted);font-weight:500}
+.empty{padding:12px 0;color:var(--muted);font-size:14px}
+
+.enter{animation:in .35s ease}
+@keyframes in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.foot{text-align:center;color:var(--muted);font-size:12px;margin-top:22px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<nav class="tabs"><div id="tabs"></div></nav>
+
+<script>
+/*<LOGICA>*/
+/* =====================================================================
+   DADOS — para alterar um horário, edita apenas este bloco.
+   Cada aula: L(slot, [sigla, sala, semestre?], [outra opção…])
+   - Duas opções na mesma hora = "X ou Y" (como aparece na tabela)
+   - semestre 1 ou 2 = só conta nesse semestre (Sem1 / Sem2)
+   Madalena: aulas com horas exatas -> M("início","fim","Nome","Sala")
+   ===================================================================== */
+
+// Tempos das escolas secundária / básica (Carolina e João)
+const SLOT = {
+  1:["08:10","09:00"], 2:["09:10","10:00"], 3:["10:20","11:10"], 4:["11:20","12:10"],
+  5:["12:20","13:10"], 6:["14:40","15:30"], 7:["15:40","16:30"], 8:["16:40","17:30"]
+};
+const L = (slot, ...ops) => ({ini:SLOT[slot][0], fim:SLOT[slot][1],
+  opcoes: ops.map(o => ({d:o[0], sala:o[1]||"", sem:o[2]||0}))});
+const M = (ini, fim, nome, sala) => ({ini, fim, opcoes:[{d:nome, sala:sala||"", sem:0}]});
+const ALMOCO = (ini, fim) => ({tipo:"almoco", ini, fim});
+
+// Siglas -> nome bonito + emoji
+const DISC = {
+  "MATEM":["Matemática","🧮"], "M.A":["Matemática A","🧮"], "PORT":["Português","📖"],
+  "ING":["Inglês","🇬🇧"], "FRAN":["Francês","🇫🇷"], "FQ":["Físico-Química","🧪"],
+  "C-NAT":["Ciências Naturais","🌱"], "E.FIS":["Educação Física","🏃"],
+  "GEO":["Geografia","🌍"], "GEOGR. A":["Geografia A","🌍"], "HIST":["História","🏛️"],
+  "TIC":["TIC","💻"], "C.D.":["Cidadania e Desenvolvimento","🤝"], "ED-VI":["Educação Visual","🎨"],
+  "DT.AL":["DT.AL","📌"], "ECON. A":["Economia A","📈"], "Filo.":["Filosofia","🤔"],
+  "Biologia Celular e Molecular":["Biologia Celular e Molecular","🧬"],
+  "Saúde Pública":["Saúde Pública","🩺"], "Introdução à Profissão":["Introdução à Profissão","🎓"],
+  "História e Sociologia da Alimentação":["História e Sociologia da Alimentação","📜"],
+  "Química dos Alimentos":["Química dos Alimentos","⚗️"], "Anatomia":["Anatomia","🫀"]
+};
+
+// dias: 1=Segunda 2=Terça 3=Quarta 4=Quinta 5=Sexta
+const FILHOS = [
+ { id:"mad", nome:"Madalena", emoji:"🎓", cls:"mad", tab:"🎓",
+   escola:"Universidade Egas Moniz", ano:"1.º ano · Ciências da Nutrição",
+   dias:{
+    1:[ M("09:00","11:00","Biologia Celular e Molecular"),
+        M("11:00","13:00","Saúde Pública"),
+        ALMOCO("13:00","14:00"),
+        M("14:00","15:00","Saúde Pública"),
+        M("15:00","17:30","Introdução à Profissão") ],
+    2:[ M("08:00","09:30","Biologia Celular e Molecular"),
+        M("09:30","11:00","Biologia Celular e Molecular"),
+        M("11:00","12:00","História e Sociologia da Alimentação"),
+        ALMOCO("12:00","13:00"),
+        M("13:00","15:30","História e Sociologia da Alimentação") ],
+    3:[],
+    4:[ M("11:30","14:30","Química dos Alimentos"),
+        ALMOCO("14:30","16:00"),
+        M("16:00","18:00","Anatomia"),
+        M("18:00","20:30","Anatomia") ],
+    5:[ M("08:00","11:30","Química dos Alimentos") ]
+ }},
+ { id:"car", nome:"Carolina", emoji:"💜", cls:"car", tab:"💜",
+   escola:"Escola Secundária de Benfica", ano:"11.º I · Economia",
+   dias:{
+    1:[ L(1,["GEOGR. A","D4"]), L(2,["GEOGR. A","D4"]), L(3,["PORT","D4"]), L(4,["PORT","D4"]),
+        L(6,["E.FIS","G3"]), L(7,["ING","D3"]) ],
+    2:[ L(1,["M.A","B8"]), L(2,["M.A","B8"]), L(3,["ING","B7"]), L(4,["ECON. A","E7"]),
+        L(5,["ECON. A","E7"]), L(6,["Filo.","D4"]), L(7,["Filo.","D4"]) ],
+    3:[ L(1,["ECON. A","E7"]), L(2,["ECON. A","E7"]), L(3,["GEOGR. A","D4"]), L(4,["GEOGR. A","D4"]),
+        L(5,["E.FIS","G4"]) ],
+    4:[ L(1,["GEOGR. A","D4"]), L(2,["GEOGR. A","D4"]), L(3,["ECON. A","E7"]), L(4,["ECON. A","E7"]),
+        L(5,["Filo.","E8"]), L(6,["PORT","MG"]), L(7,["PORT","MG"]), L(8,["M.A","A8"]) ],
+    5:[ L(1,["E.FIS","G3"]), L(2,["ING","B6"]), L(3,["M.A","D4"]), L(4,["M.A","D4"]) ]
+ }},
+ { id:"joa", nome:"João", emoji:"🚀", cls:"joa", tab:"🚀", semestres:true,
+   escola:"Escola Pedro de Santarém", ano:"8.º A",
+   dias:{
+    1:[ L(1,["FQ","C206"],["C-NAT","C203"]), L(2,["FQ","C206"],["C-NAT","C203"]),
+        L(3,["E.FIS","Gin 1"]), L(4,["MATEM","A216"]), L(5,["ING","A216"]) ],
+    2:[ L(1,["C-NAT","A216"]), L(2,["FQ","A216"]), L(3,["FRAN","A216"]), L(4,["FRAN","A216"]),
+        L(5,["GEO","A216",1],["HIST","A216",2]), L(6,["TIC","B112"]), L(7,["MATEM","A216"]) ],
+    3:[ L(1,["GEO","A216",1],["HIST","A216",2]), L(2,["GEO","A216",1],["HIST","A216",2]),
+        L(3,["PORT","A216"]), L(4,["E.FIS","Gin 3"]) ],
+    4:[ L(1,["MATEM","A216"]), L(2,["PORT","A216"]), L(3,["GEO","A216",1],["HIST","A216",2]),
+        L(4,["FQ","A216"]), L(5,["ING","A216"]), L(6,["C.D.","A216"],["TIC","B112"]),
+        L(7,["ED-VI","C011"]), L(8,["ED-VI","C011"]) ],
+    5:[ L(1,["PORT","A216"]), L(2,["PORT","A216"]), L(3,["ING","A216"],["FRAN","A216"]),
+        L(4,["C-NAT","A216"]), L(6,["MATEM","A216"]), L(7,["E.FIS","Gin 1"]), L(8,["DT.AL","A216"]) ]
+ }}
+];
+
+/* ======================== LÓGICA ======================== */
+const DIAS = ["Domingo","Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado"];
+const DIAS_CURTO = ["Dom","Segunda","Terça","Quarta","Quinta","Sexta","Sáb"];
+const min = s => { const p = s.split(":"); return (+p[0])*60 + (+p[1]); };
+const hhmm = m => String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0");
+
+function aulasDoDia(f, d, sem){
+  const raw = f.dias[d] || [];
+  const out = [];
+  for (const a of raw){
+    if (a.tipo === "almoco"){ out.push(a); continue; }
+    const ops = a.opcoes.filter(o => !o.sem || !sem || o.sem === sem);
+    if (ops.length) out.push({ini:a.ini, fim:a.fim, opcoes:ops});
+  }
+  return out;
+}
+function nomeDisc(sig){ const x = DISC[sig]; return x ? x[0] : sig; }
+function emojiDisc(sig){ const x = DISC[sig]; return x ? x[1] : "📌"; }
+function descAula(a){
+  const ops = a.opcoes;
+  const titulo = ops.map(o => nomeDisc(o.d) + (o.sem ? " (Sem"+o.sem+")" : "")).join(" ou ");
+  const salas = ops.map(o => o.sala).filter(Boolean);
+  const sala = salas.length && salas.every(s => s === salas[0]) ? salas[0] : salas.join(" / ");
+  const emoji = ops.length > 1 ? "🔀" : emojiDisc(ops[0].d);
+  return {titulo, sala, emoji};
+}
+
+function estado(f, d, t, sem){
+  if (d < 1 || d > 5) return {tipo:"fds"};
+  const todas = aulasDoDia(f, d, sem);
+  const aulas = todas.filter(a => a.tipo !== "almoco");
+  const almocos = todas.filter(a => a.tipo === "almoco");
+  if (!aulas.length) return {tipo:"semaulas"};
+  const primeira = aulas[0], ultima = aulas[aulas.length-1];
+  const fimHoje = ultima.fim;
+  for (let i = 0; i < aulas.length; i++){
+    const a = aulas[i], i0 = min(a.ini), i1 = min(a.fim);
+    if (t >= i0 && t < i1)
+      return {tipo:"agora", aula:a, seguinte:aulas[i+1]||null, fimHoje, resto:i1-t, prog:(t-i0)/(i1-i0)};
+  }
+  if (t < min(primeira.ini)) return {tipo:"antes", seguinte:primeira, fimHoje, ate:min(primeira.ini)-t};
+  if (t >= min(ultima.fim)) return {tipo:"acabou", fimHoje};
+  const i = aulas.findIndex(a => min(a.ini) > t);
+  const seg = aulas[i], prev = aulas[i-1];
+  const gap = min(seg.ini) - min(prev.fim);
+  const almExplicito = almocos.some(x => t >= min(x.ini) && t < min(x.fim));
+  const almImplicito = gap >= 60 && min(prev.fim) < 15*60 && min(seg.ini) > 12*60;
+  let tipo = "intervalo";
+  if (almExplicito || almImplicito) tipo = "almoco";
+  else if (gap >= 60) tipo = "furo";
+  return {tipo, seguinte:seg, fimHoje, ate:min(seg.ini)-t};
+}
+
+function fundir(lista){ // junta aulas seguidas iguais (só para a vista Semana)
+  const out = [];
+  for (const a of lista){
+    const p = out[out.length-1];
+    const key = a.tipo === "almoco" ? "alm" : JSON.stringify(a.opcoes);
+    if (p && p.key === key && min(a.ini) - min(p.fim) <= 15){ p.fim = a.fim; continue; }
+    out.push({...a, key});
+  }
+  return out;
+}
+function primeiroDiaComAulas(f, sem){
+  for (let d = 1; d <= 5; d++) if (aulasDoDia(f, d, sem).some(a => a.tipo !== "almoco")) return d;
+  return 1;
+}
+/*</LOGICA>*/
+
+/* ======================== ESTADO DA APP ======================== */
+function guardar(k, v){ try{ localStorage.setItem(k, v); }catch(e){} }
+function ler(k, def){ try{ const v = localStorage.getItem(k); return v === null ? def : v; }catch(e){ return def; } }
+
+let vista = "hoje";                    // "hoje" ou id do filho
+let sub = {mad:ler("sub_mad","hoje"), car:ler("sub_car","hoje"), joa:ler("sub_joa","hoje")};
+let semestre = +ler("semestre", "0");  // 0 = ambos, 1, 2 (só João)
+
+function agora(){
+  const n = new Date();
+  let d = n.getDay(), t = n.getHours()*60 + n.getMinutes(), sim = false;
+  const q = location.search + location.hash;     // para testar: ?dia=3&hora=10:30
+  const md = /dia=(\d)/.exec(q), mh = /hora=(\d\d:\d\d)/.exec(q);
+  if (md){ d = +md[1]; sim = true; }
+  if (mh){ t = min(mh[1]); sim = true; }
+  return {d, t, sim, date:n};
+}
+const semDe = f => f.semestres ? semestre : 0;
+
+/* ======================== UI ======================== */
+const PILL = {
+  agora:["🟢 AGORA","live"], intervalo:["☕ Intervalo",""], almoco:["🍴 A almoçar",""], furo:["🕐 Furo",""],
+  antes:["⏰ Ainda não começou",""], acabou:["🏠 Por hoje acabou!",""], fds:["🎉 Fim de semana!",""],
+  semaulas:["😴 Hoje não tem aulas",""]
+};
+const ICON = {agora:"🟢", intervalo:"☕", almoco:"🍴", furo:"🕐", antes:"⏰", acabou:"🏠", fds:"🎉", semaulas:"😴"};
+
+function linhaSala(x){ return x.sala ? " · "+x.sala : ""; }
+function seguinteTxt(e){
+  if (!e.seguinte) return "<b>Última aula do dia</b> 🎒";
+  const s = descAula(e.seguinte);
+  return "A seguir: <b>"+s.titulo+"</b> às "+e.seguinte.ini+(s.sala ? " ("+s.sala+")" : "");
+}
+function cartao(f, e, t){
+  const p = PILL[e.tipo];
+  let corpo = "", rodape = "";
+  if (e.tipo === "agora"){
+    const a = descAula(e.aula);
+    corpo = '<div class="big">'+a.emoji+" "+a.titulo+'</div>'+
+      '<div class="when">'+e.aula.ini+" – "+e.aula.fim+linhaSala(a)+'</div>'+
+      '<div class="prog"><i style="width:'+Math.round(e.prog*100)+'%"></i></div>'+
+      '<div class="left">faltam '+e.resto+' min</div>';
+    rodape = '<div>'+seguinteTxt(e)+'</div><div class="end">Termina hoje: <b>'+e.fimHoje+'</b></div>';
+  } else if (e.tipo === "intervalo" || e.tipo === "almoco" || e.tipo === "furo"){
+    corpo = '<div class="when">daqui a '+e.ate+' min</div>';
+    rodape = '<div>'+seguinteTxt(e)+'</div><div class="end">Termina hoje: <b>'+e.fimHoje+'</b></div>';
+  } else if (e.tipo === "antes"){
+    const s = descAula(e.seguinte);
+    corpo = '<div class="when">Primeira aula: <b>'+s.titulo+'</b> às '+e.seguinte.ini+linhaSala(s)+'</div>';
+    rodape = '<div></div><div class="end">Termina hoje: <b>'+e.fimHoje+'</b></div>';
+  } else if (e.tipo === "acabou"){
+    corpo = '<div class="when">Acabou às '+e.fimHoje+'</div>';
+  } else if (e.tipo === "fds"){
+    corpo = '<div class="when">Sem aulas. Bom descanso!</div>';
+  }
+  return '<div class="card '+f.cls+'" onclick="ir(\''+f.id+'\')">'+
+    '<div class="who"><span>'+f.emoji+' '+f.nome+'</span><small>'+f.escola.replace("Universidade ","").replace("Escola Secundária de ","").replace("Escola ","")+'</small></div>'+
+    '<div class="pill '+p[1]+'">'+(p[1] ? '<i class="dot"></i>AGORA' : p[0])+'</div>'+
+    corpo+(rodape ? '<div class="next">'+rodape+'</div>' : "")+'</div>';
+}
+
+function ecraHoje(a){
+  const est = FILHOS.map(f => ({f, e:estado(f, a.d, a.t, semDe(f))}));
+  const h = a.t < 12*60 ? "Bom dia ☀️" : a.t < 20*60 ? "Boa tarde 🌤️" : "Boa noite 🌙";
+  let html = '<div class="top"><div><h1>Horários</h1><div class="sub">'+h+' · '+
+    (a.sim ? DIAS[a.d] : a.date.toLocaleDateString("pt-PT",{weekday:"long",day:"numeric",month:"long"}))+
+    (a.sim ? '<span class="sim">simulação</span>' : '')+'</div></div><div class="clock">'+hhmm(a.t)+'</div></div>';
+  html += est.map(x => cartao(x.f, x.e, a.t)).join("");
+
+  if (a.d >= 1 && a.d <= 5){
+    const com = est.filter(x => x.e.fimHoje).sort((x,y) => min(x.e.fimHoje) - min(y.e.fimHoje));
+    const sem = est.filter(x => !x.e.fimHoje);
+    if (com.length){
+      const med = ["🥇","🥈","🥉"];
+      html += '<div class="panel"><h3>Hoje em casa 🏠</h3>'+
+        com.map((x,i) => '<div class="rank"><span class="m">'+med[i]+'</span><span class="t">'+x.f.nome+
+          ' acaba às</span><span class="e">'+x.e.fimHoje+'</span><span class="s">'+ICON[x.e.tipo]+'</span></div>').join("")+
+        sem.map(x => '<div class="rank"><span class="m">😴</span><span class="t">'+x.f.nome+' não tem aulas</span></div>').join("")+
+        '</div>';
+    }
+  } else {
+    html += '<div class="panel"><h3>Segunda-feira começam…</h3>'+
+      FILHOS.map(f => {
+        const sm = semDe(f), d1 = primeiroDiaComAulas(f, sm);
+        const l = aulasDoDia(f, 1, sm).filter(x => x.tipo !== "almoco")[0];
+        return '<div class="rank"><span class="m">'+f.emoji+'</span><span class="t">'+f.nome+'</span><span class="e">'+
+          (l ? l.ini : "—")+'</span></div>';
+      }).join("")+'</div>';
+  }
+  html += '<div class="foot">Toca num cartão para ver o horário completo ✨</div>';
+  return html;
+}
+
+function ecraFilho(f, a){
+  const sm = semDe(f);
+  const e = estado(f, a.d, a.t, sm);
+  const dia = (a.d >= 1 && a.d <= 5) ? a.d : 1;
+  const sb = sub[f.id];
+  let html = '<div class="hero '+f.cls+'"><h2>'+f.emoji+' '+f.nome+'</h2><p>'+f.ano+' · '+f.escola+'</p></div>';
+  html += '<div class="seg '+f.cls+'"><button class="'+(sb==="hoje"?"on":"")+'" onclick="setSub(\''+f.id+'\',\'hoje\')">Hoje</button>'+
+          '<button class="'+(sb==="semana"?"on":"")+'" onclick="setSub(\''+f.id+'\',\'semana\')">Semana</button></div>';
+  if (f.semestres){
+    html += '<div class="chips '+f.cls+'">Semestre:'+
+      [[0,"Ambos"],[1,"1.º sem"],[2,"2.º sem"]].map(x =>
+        '<button class="'+(semestre===x[0]?"on":"")+'" onclick="setSem('+x[0]+')">'+x[1]+'</button>').join("")+'</div>';
+  }
+  if (f.nota) html += '<div class="note">⚠️ '+f.nota+'</div>';
+
+  if (sb === "hoje"){
+    html += cartao(f, e, a.t);
+    const eHoje = a.d >= 1 && a.d <= 5;
+    const lista = aulasDoDia(f, dia, sm);
+    html += '<div class="hint">'+(eHoje ? "O dia de hoje" : "Segunda-feira, para ir espreitando")+' · '+DIAS[dia]+'</div><div class="tl '+f.cls+'">';
+    if (!lista.length) html += '<div class="panel">😴 Sem aulas neste dia.</div>';
+    for (const x of lista){
+      if (x.tipo === "almoco"){
+        html += '<div class="it almoco '+(eHoje && a.t>=min(x.ini)&&a.t<min(x.fim)?'now':'')+'"><div class="tm">'+x.ini+'<br>'+x.fim+
+                '</div><div class="box"><b>🍴 Almoço</b></div></div>';
+        continue;
+      }
+      const d = descAula(x);
+      const past = eHoje && a.t >= min(x.fim), now = eHoje && a.t >= min(x.ini) && a.t < min(x.fim);
+      html += '<div class="it '+(past?"past":"")+(now?" now":"")+'"><div class="tm">'+x.ini+'<br>'+x.fim+'</div>'+
+        '<div class="box"><b>'+d.emoji+' '+d.titulo+(now?'<i class="tag">AGORA</i>':'')+'</b>'+
+        '<span>'+(d.sala ? "Sala "+d.sala : "")+'</span></div></div>';
+    }
+    html += '</div>';
+  } else {
+    for (let d = 1; d <= 5; d++){
+      const lista = fundir(aulasDoDia(f, d, sm));
+      const aulas = lista.filter(x => x.tipo !== "almoco");
+      const fim = aulas.length ? aulas[aulas.length-1].fim : null;
+      html += '<div class="day '+f.cls+(d===a.d?" hoje":"")+'"><div class="dh"><span>'+DIAS_CURTO[d]+(d===a.d?" · hoje":"")+'</span><small>'+
+        (fim ? "acaba às "+fim : "sem aulas")+'</small></div><div class="rows">';
+      if (!lista.length) html += '<div class="empty">Sem aulas 😴</div>';
+      for (const x of lista){
+        if (x.tipo === "almoco"){
+          html += '<div class="r al"><span class="h">'+x.ini+' – '+x.fim+'</span><span class="n">🍴 Almoço</span></div>';
+        } else {
+          const dd = descAula(x);
+          html += '<div class="r"><span class="h">'+x.ini+' – '+x.fim+'</span><span class="n">'+dd.emoji+' '+dd.titulo+
+                  '</span><span class="s">'+dd.sala+'</span></div>';
+        }
+      }
+      html += '</div></div>';
+    }
+  }
+  return html;
+}
+
+function tabs(){
+  const itens = [{id:"hoje", ic:"🏠", t:"Hoje", cls:""}].concat(FILHOS.map(f => ({id:f.id, ic:f.tab, t:f.nome, cls:f.cls})));
+  document.getElementById("tabs").innerHTML = itens.map(i =>
+    '<div class="tab '+i.cls+(vista===i.id?" on":"")+'" onclick="ir(\''+i.id+'\')"><span>'+i.ic+'</span>'+i.t+'</div>').join("");
+}
+
+function render(animar){
+  const a = agora();
+  const f = FILHOS.find(x => x.id === vista);
+  const el = document.getElementById("app");
+  const y = window.scrollY;
+  el.innerHTML = '<div class="'+(animar?"enter":"")+'">'+(f ? ecraFilho(f, a) : ecraHoje(a))+'</div>';
+  if (!animar) window.scrollTo(0, y);
+  tabs();
+}
+function ir(id){ vista = id; window.scrollTo(0,0); render(true); }
+function setSub(id, v){ sub[id] = v; guardar("sub_"+id, v); render(true); }
+function setSem(n){ semestre = n; guardar("semestre", String(n)); render(false); }
+
+if ("serviceWorker" in navigator && location.protocol.startsWith("http")) { navigator.serviceWorker.register("sw.js").catch(function(){}); }
+render(true);
+setInterval(() => render(false), 15000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) render(false); });
+</script>
+</body>
+</html>
