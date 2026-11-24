@@ -127,6 +127,34 @@ html,body{margin:0;background:var(--bg);color:var(--ink);
 .r.al .n{color:var(--muted);font-weight:500}
 .empty{padding:12px 0;color:var(--muted);font-size:14px}
 
+.it.ativ .box{border-left-color:#ff9f0a}
+.it.ativ.now .box{background:linear-gradient(135deg,#ffe3b0,#ffc98a);color:#1c1c1e}
+@media (prefers-color-scheme: dark){.it.ativ.now .box{background:linear-gradient(135deg,#5a3d0a,#7a4f0c);color:#f5f5f7}}
+.r.at .n{color:#d98200}
+.ex{display:flex;align-items:center;gap:12px;background:var(--panel);border-radius:18px;padding:12px 14px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.ex .exi{font-size:28px}
+.ex .exm{flex:1}
+.ex .exm b{display:block;font-size:17px}
+.ex .exm span{font-size:13px;color:var(--muted)}
+.ex button{border:0;background:transparent;font-size:20px;cursor:pointer;padding:6px}
+.add{width:100%;border:0;border-radius:18px;padding:14px;font:inherit;font-weight:800;font-size:16px;background:linear-gradient(135deg,var(--a),var(--b));color:var(--ink);cursor:pointer;margin-top:4px}
+.ov{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.4);display:flex;align-items:flex-end;justify-content:center;z-index:30}
+.sh{background:var(--panel);color:var(--ink);width:100%;max-width:560px;max-height:92vh;overflow:auto;border-radius:26px 26px 0 0;padding:18px 16px calc(env(safe-area-inset-bottom) + 18px);animation:up .25s ease}
+@keyframes up{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+.sh h3{margin:0 0 6px;font-size:20px}
+.lbl{display:block;font-size:13px;color:var(--muted);font-weight:700;margin:12px 2px 6px}
+.sh input{width:100%;font:inherit;font-size:16px;padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.pre{display:flex;flex-wrap:wrap;gap:7px}
+.pre button{border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;font-size:14px;font-weight:600;padding:7px 11px;border-radius:99px;cursor:pointer}
+.pre button.on{background:var(--acc);color:#fff;border-color:transparent}
+.two{display:flex;gap:10px}
+.two>div{flex:1}
+.err{color:#ff453a;font-size:14px;min-height:18px;margin-top:8px}
+.acts{display:flex;gap:8px;margin-top:6px}
+.acts button{flex:1;border:0;border-radius:14px;padding:13px;font:inherit;font-weight:800;font-size:16px;background:var(--bg);color:var(--ink);cursor:pointer}
+.acts .pri{background:var(--acc);color:#fff}
+.acts .del{color:#ff453a}
+@media (prefers-color-scheme: dark){.pre button.on,.acts .pri{color:#000}}
 .enter{animation:in .35s ease}
 @keyframes in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 .foot{text-align:center;color:var(--muted);font-size:12px;margin-top:22px}
@@ -135,6 +163,7 @@ html,body{margin:0;background:var(--bg);color:var(--ink);
 <body>
 <div id="app"></div>
 <nav class="tabs"><div id="tabs"></div></nav>
+<div id="sheet"></div>
 
 <script>
 /*<LOGICA>*/
@@ -289,6 +318,31 @@ function primeiroDiaComAulas(f, sem){
   for (let d = 1; d <= 5; d++) if (aulasDoDia(f, d, sem).some(a => a.tipo !== "almoco")) return d;
   return 1;
 }
+
+/* ---- Extras (explicações, desporto, música…) ----
+   Cada extra: {nome, emoji, dias:[1..5, 6=sáb, 0=dom], ini:"17:00", fim:"18:00", local:""} */
+function ativsDoDia(lista, d){
+  return (lista || []).filter(a => a.dias.indexOf(d) >= 0).sort((x,y) => min(x.ini) - min(y.ini));
+}
+function estadoCompleto(f, d, t, sem, lista){
+  const e = estado(f, d, t, sem);
+  const at = ativsDoDia(lista, d);
+  if (!at.length) return e;
+  const prox = at.find(x => min(x.ini) > t) || null;
+  if (e.tipo === "agora"){ e.ativSeg = prox; return e; }   // se coincidir com uma aula, a aula manda
+  const cur = at.find(x => t >= min(x.ini) && t < min(x.fim));
+  if (cur){
+    return {tipo:"ativ", ativ:cur, resto:min(cur.fim)-t,
+      prog:(t-min(cur.ini))/(min(cur.fim)-min(cur.ini)),
+      seguinte:e.seguinte || null, ativSeg:prox, fimHoje:e.fimHoje || null};
+  }
+  e.ativSeg = prox;
+  return e;
+}
+function itensDoDia(f, d, sem, lista){
+  const ex = ativsDoDia(lista, d).map(a => ({tipo:"ativ", ini:a.ini, fim:a.fim, ativ:a}));
+  return aulasDoDia(f, d, sem).concat(ex).sort((x,y) => min(x.ini) - min(y.ini));
+}
 /*</LOGICA>*/
 
 /* ======================== ESTADO DA APP ======================== */
@@ -298,6 +352,12 @@ function ler(k, def){ try{ const v = localStorage.getItem(k); return v === null 
 let vista = "hoje";                    // "hoje" ou id do filho
 let sub = {mad:ler("sub_mad","hoje"), car:ler("sub_car","hoje"), joa:ler("sub_joa","hoje")};
 let semestre = +ler("semestre", "0");  // 0 = ambos, 1, 2 (só João)
+
+const ATIV = {mad:[], car:[], joa:[]};   // extras de cada filho (guardados no telemóvel)
+(function(){
+  try{ const v = JSON.parse(ler("atividades","{}")); ["mad","car","joa"].forEach(function(k){ if (Array.isArray(v[k])) ATIV[k] = v[k]; }); }catch(e){}
+})();
+function guardarAtiv(){ guardar("atividades", JSON.stringify(ATIV)); }
 
 function agora(){
   const n = new Date();
@@ -311,40 +371,61 @@ function agora(){
 const semDe = f => f.semestres ? semestre : 0;
 
 /* ======================== UI ======================== */
+const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");
+const NOMES3 = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+const ORDEM_DIAS = [1,2,3,4,5,6,0];
+function diasTxt(ds){ return ORDEM_DIAS.filter(d => ds.indexOf(d) >= 0).map(d => NOMES3[d]).join(" · "); }
+
 const PILL = {
-  agora:["🟢 AGORA","live"], intervalo:["☕ Intervalo",""], almoco:["🍴 A almoçar",""], furo:["🕐 Furo",""],
-  antes:["⏰ Ainda não começou",""], acabou:["🏠 Por hoje acabou!",""], fds:["🎉 Fim de semana!",""],
-  semaulas:["😴 Hoje não tem aulas",""]
+  agora:["🟢 AGORA","live"], ativ:["🟢 AGORA","live"], intervalo:["☕ Intervalo",""], almoco:["🍴 A almoçar",""],
+  furo:["🕐 Furo",""], antes:["⏰ Ainda não começou",""], acabou:["🏠 Por hoje acabou!",""],
+  fds:["🎉 Fim de semana!",""], semaulas:["😴 Hoje não tem aulas",""]
 };
-const ICON = {agora:"🟢", intervalo:"☕", almoco:"🍴", furo:"🕐", antes:"⏰", acabou:"🏠", fds:"🎉", semaulas:"😴"};
+const ICON = {agora:"🟢", ativ:"🟢", intervalo:"☕", almoco:"🍴", furo:"🕐", antes:"⏰", acabou:"🏠", fds:"🎉", semaulas:"😴"};
 
 function linhaSala(x){ return x.sala ? " · "+x.sala : ""; }
 function seguinteTxt(e){
-  if (!e.seguinte) return "<b>Última aula do dia</b> 🎒";
-  const s = descAula(e.seguinte);
-  return "A seguir: <b>"+s.titulo+"</b> às "+e.seguinte.ini+(s.sala ? " ("+s.sala+")" : "");
+  const c = [];
+  if (e.seguinte){ const s = descAula(e.seguinte); c.push({ini:e.seguinte.ini, t:s.titulo, sala:s.sala}); }
+  if (e.ativSeg) c.push({ini:e.ativSeg.ini, t:esc(e.ativSeg.emoji)+" "+esc(e.ativSeg.nome), sala:e.ativSeg.local ? esc(e.ativSeg.local) : ""});
+  c.sort((x,y) => min(x.ini) - min(y.ini));
+  if (!c.length) return e.tipo === "agora" ? "<b>Última aula do dia</b> 🎒" : e.tipo === "ativ" ? "<b>Último programa de hoje</b> 🎒" : "";
+  return "A seguir: <b>"+c[0].t+"</b> às "+c[0].ini+(c[0].sala ? " ("+c[0].sala+")" : "");
 }
 function cartao(f, e, t){
   const p = PILL[e.tipo];
   let corpo = "", rodape = "";
+  const seg = seguinteTxt(e);
+  const fimTxt = e.fimHoje ? '<div class="end">Termina hoje: <b>'+e.fimHoje+'</b></div>' : '<div></div>';
   if (e.tipo === "agora"){
     const a = descAula(e.aula);
     corpo = '<div class="big">'+a.emoji+" "+a.titulo+'</div>'+
       '<div class="when">'+e.aula.ini+" – "+e.aula.fim+linhaSala(a)+'</div>'+
       '<div class="prog"><i style="width:'+Math.round(e.prog*100)+'%"></i></div>'+
       '<div class="left">faltam '+e.resto+' min</div>';
-    rodape = '<div>'+seguinteTxt(e)+'</div><div class="end">Termina hoje: <b>'+e.fimHoje+'</b></div>';
+    rodape = '<div>'+seg+'</div>'+fimTxt;
+  } else if (e.tipo === "ativ"){
+    const A = e.ativ;
+    corpo = '<div class="big">'+esc(A.emoji)+" "+esc(A.nome)+'</div>'+
+      '<div class="when">'+A.ini+" – "+A.fim+(A.local ? " · "+esc(A.local) : "")+'</div>'+
+      '<div class="prog"><i style="width:'+Math.round(e.prog*100)+'%"></i></div>'+
+      '<div class="left">faltam '+e.resto+' min</div>';
+    rodape = '<div>'+seg+'</div>'+(e.fimHoje ? '<div class="end">Aulas até <b>'+e.fimHoje+'</b></div>' : "");
   } else if (e.tipo === "intervalo" || e.tipo === "almoco" || e.tipo === "furo"){
     corpo = '<div class="when">daqui a '+e.ate+' min</div>';
-    rodape = '<div>'+seguinteTxt(e)+'</div><div class="end">Termina hoje: <b>'+e.fimHoje+'</b></div>';
+    rodape = '<div>'+seg+'</div>'+fimTxt;
   } else if (e.tipo === "antes"){
     const s = descAula(e.seguinte);
     corpo = '<div class="when">Primeira aula: <b>'+s.titulo+'</b> às '+e.seguinte.ini+linhaSala(s)+'</div>';
-    rodape = '<div></div><div class="end">Termina hoje: <b>'+e.fimHoje+'</b></div>';
+    rodape = '<div></div>'+fimTxt;
   } else if (e.tipo === "acabou"){
     corpo = '<div class="when">Acabou às '+e.fimHoje+'</div>';
+    if (seg) rodape = '<div>'+seg+'</div>';
   } else if (e.tipo === "fds"){
     corpo = '<div class="when">Sem aulas. Bom descanso!</div>';
+    if (seg) rodape = '<div>'+seg+'</div>';
+  } else if (e.tipo === "semaulas"){
+    if (seg) rodape = '<div>'+seg+'</div>';
   }
   return '<div class="card '+f.cls+'" onclick="ir(\''+f.id+'\')">'+
     '<div class="who"><span>'+f.emoji+' '+f.nome+'</span><small>'+f.escola.replace("Universidade ","").replace("Escola Secundária de ","").replace("Escola ","")+'</small></div>'+
@@ -353,7 +434,7 @@ function cartao(f, e, t){
 }
 
 function ecraHoje(a){
-  const est = FILHOS.map(f => ({f, e:estado(f, a.d, a.t, semDe(f))}));
+  const est = FILHOS.map(f => ({f, e:estadoCompleto(f, a.d, a.t, semDe(f), ATIV[f.id])}));
   const h = a.t < 12*60 ? "Bom dia ☀️" : a.t < 20*60 ? "Boa tarde 🌤️" : "Boa noite 🌙";
   let html = '<div class="top"><div><h1>Horários</h1><div class="sub">'+h+' · '+
     (a.sim ? DIAS[a.d] : a.date.toLocaleDateString("pt-PT",{weekday:"long",day:"numeric",month:"long"}))+
@@ -385,50 +466,66 @@ function ecraHoje(a){
 }
 
 function ecraFilho(f, a){
-  const sm = semDe(f);
-  const e = estado(f, a.d, a.t, sm);
-  const dia = (a.d >= 1 && a.d <= 5) ? a.d : 1;
+  const sm = semDe(f), lista = ATIV[f.id];
+  const e = estadoCompleto(f, a.d, a.t, sm, lista);
+  const temHoje = ativsDoDia(lista, a.d).length > 0;
+  const dia = ((a.d >= 1 && a.d <= 5) || temHoje) ? a.d : 1;
+  const eHoje = dia === a.d;
   const sb = sub[f.id];
   let html = '<div class="hero '+f.cls+'"><h2>'+f.emoji+' '+f.nome+'</h2><p>'+f.ano+' · '+f.escola+'</p></div>';
-  html += '<div class="seg '+f.cls+'"><button class="'+(sb==="hoje"?"on":"")+'" onclick="setSub(\''+f.id+'\',\'hoje\')">Hoje</button>'+
-          '<button class="'+(sb==="semana"?"on":"")+'" onclick="setSub(\''+f.id+'\',\'semana\')">Semana</button></div>';
-  if (f.semestres){
+  html += '<div class="seg '+f.cls+'">'+
+    [["hoje","Hoje"],["semana","Semana"],["extras","Extras"+(lista.length ? " · "+lista.length : "")]].map(function(x){
+      return '<button class="'+(sb===x[0]?"on":"")+'" onclick="setSub(\''+f.id+'\',\''+x[0]+'\')">'+x[1]+'</button>';
+    }).join("")+'</div>';
+  if (f.semestres && sb !== "extras"){
     html += '<div class="chips '+f.cls+'">Semestre:'+
-      [[0,"Ambos"],[1,"1.º sem"],[2,"2.º sem"]].map(x =>
-        '<button class="'+(semestre===x[0]?"on":"")+'" onclick="setSem('+x[0]+')">'+x[1]+'</button>').join("")+'</div>';
+      [[0,"Ambos"],[1,"1.º sem"],[2,"2.º sem"]].map(function(x){
+        return '<button class="'+(semestre===x[0]?"on":"")+'" onclick="setSem('+x[0]+')">'+x[1]+'</button>';
+      }).join("")+'</div>';
   }
-  if (f.nota) html += '<div class="note">⚠️ '+f.nota+'</div>';
 
   if (sb === "hoje"){
     html += cartao(f, e, a.t);
-    const eHoje = a.d >= 1 && a.d <= 5;
-    const lista = aulasDoDia(f, dia, sm);
+    const itens = itensDoDia(f, dia, sm, lista);
     html += '<div class="hint">'+(eHoje ? "O dia de hoje" : "Segunda-feira, para ir espreitando")+' · '+DIAS[dia]+'</div><div class="tl '+f.cls+'">';
-    if (!lista.length) html += '<div class="panel">😴 Sem aulas neste dia.</div>';
-    for (const x of lista){
-      if (x.tipo === "almoco"){
-        html += '<div class="it almoco '+(eHoje && a.t>=min(x.ini)&&a.t<min(x.fim)?'now':'')+'"><div class="tm">'+x.ini+'<br>'+x.fim+
-                '</div><div class="box"><b>🍴 Almoço</b></div></div>';
-        continue;
-      }
-      const d = descAula(x);
+    if (!itens.length) html += '<div class="panel">😴 Sem aulas neste dia.</div>';
+    for (const x of itens){
       const past = eHoje && a.t >= min(x.fim), now = eHoje && a.t >= min(x.ini) && a.t < min(x.fim);
-      html += '<div class="it '+(past?"past":"")+(now?" now":"")+'"><div class="tm">'+x.ini+'<br>'+x.fim+'</div>'+
-        '<div class="box"><b>'+d.emoji+' '+d.titulo+(now?'<i class="tag">AGORA</i>':'')+'</b>'+
-        '<span>'+(d.sala ? "Sala "+d.sala : "")+'</span></div></div>';
+      if (x.tipo === "almoco"){
+        html += '<div class="it almoco '+(now?'now':'')+'"><div class="tm">'+x.ini+'<br>'+x.fim+
+                '</div><div class="box"><b>🍴 Almoço</b></div></div>';
+      } else if (x.tipo === "ativ"){
+        const A = x.ativ;
+        html += '<div class="it ativ '+(past?"past":"")+(now?" now":"")+'"><div class="tm">'+x.ini+'<br>'+x.fim+'</div>'+
+          '<div class="box"><b>'+esc(A.emoji)+' '+esc(A.nome)+(now?'<i class="tag">AGORA</i>':'')+'</b>'+
+          '<span>Extra'+(A.local ? " · "+esc(A.local) : "")+'</span></div></div>';
+      } else {
+        const d = descAula(x);
+        html += '<div class="it '+(past?"past":"")+(now?" now":"")+'"><div class="tm">'+x.ini+'<br>'+x.fim+'</div>'+
+          '<div class="box"><b>'+d.emoji+' '+d.titulo+(now?'<i class="tag">AGORA</i>':'')+'</b>'+
+          '<span>'+(d.sala ? "Sala "+d.sala : "")+'</span></div></div>';
+      }
     }
     html += '</div>';
-  } else {
-    for (let d = 1; d <= 5; d++){
-      const lista = fundir(aulasDoDia(f, d, sm));
-      const aulas = lista.filter(x => x.tipo !== "almoco");
+  } else if (sb === "semana"){
+    for (const d of ORDEM_DIAS){
+      const at = ativsDoDia(lista, d);
+      if ((d === 6 || d === 0) && !at.length) continue;
+      const esc1 = fundir(aulasDoDia(f, d, sm));
+      const todo = esc1.concat(at.map(x => ({tipo:"ativ", ini:x.ini, fim:x.fim, ativ:x}))).sort((x,y) => min(x.ini) - min(y.ini));
+      const aulas = esc1.filter(x => x.tipo !== "almoco");
       const fim = aulas.length ? aulas[aulas.length-1].fim : null;
-      html += '<div class="day '+f.cls+(d===a.d?" hoje":"")+'"><div class="dh"><span>'+DIAS_CURTO[d]+(d===a.d?" · hoje":"")+'</span><small>'+
-        (fim ? "acaba às "+fim : "sem aulas")+'</small></div><div class="rows">';
-      if (!lista.length) html += '<div class="empty">Sem aulas 😴</div>';
-      for (const x of lista){
+      const fimDeSemana = d === 6 || d === 0;
+      html += '<div class="day '+f.cls+(d===a.d?" hoje":"")+'"><div class="dh"><span>'+DIAS[d].replace("-feira","")+(d===a.d?" · hoje":"")+'</span><small>'+
+        (fim ? "aulas até "+fim : (fimDeSemana ? "fim de semana" : "sem aulas"))+'</small></div><div class="rows">';
+      if (!todo.length) html += '<div class="empty">Sem aulas 😴</div>';
+      for (const x of todo){
         if (x.tipo === "almoco"){
           html += '<div class="r al"><span class="h">'+x.ini+' – '+x.fim+'</span><span class="n">🍴 Almoço</span></div>';
+        } else if (x.tipo === "ativ"){
+          const A = x.ativ;
+          html += '<div class="r at"><span class="h">'+x.ini+' – '+x.fim+'</span><span class="n">'+esc(A.emoji)+' '+esc(A.nome)+
+                  '</span><span class="s">'+(A.local ? esc(A.local) : "extra")+'</span></div>';
         } else {
           const dd = descAula(x);
           html += '<div class="r"><span class="h">'+x.ini+' – '+x.fim+'</span><span class="n">'+dd.emoji+' '+dd.titulo+
@@ -437,8 +534,70 @@ function ecraFilho(f, a){
       }
       html += '</div></div>';
     }
+  } else {
+    html += '<div class="hint">Coisas que se repetem todas as semanas: explicações, desporto, música…</div>';
+    if (!lista.length) html += '<div class="panel">Ainda não há extras. ⚽ Futebol? 📚 Explicação? 🤸 Ginástica?</div>';
+    lista.forEach(function(x, i){
+      html += '<div class="ex '+f.cls+'"><div class="exi">'+esc(x.emoji)+'</div><div class="exm"><b>'+esc(x.nome)+'</b><span>'+
+        diasTxt(x.dias)+' · '+x.ini+'–'+x.fim+(x.local ? ' · '+esc(x.local) : '')+'</span></div>'+
+        '<button onclick="abrirForm(\''+f.id+'\','+i+')">✏️</button></div>';
+    });
+    html += '<button class="add '+f.cls+'" onclick="abrirForm(\''+f.id+'\',-1)">＋ Adicionar extra</button>';
   }
   return html;
+}
+
+/* ---- formulário de extras ---- */
+const PRESETS = [["Explicação","📚"],["Ginástica","🤸"],["Futebol","⚽"],["Natação","🏊"],["Música","🎹"],["Dança","💃"],["Judo","🥋"],["Ténis","🎾"]];
+const EMOJIS = ["⚽","🤸","🏊","🎹","🎸","📚","💃","🥋","🎾","🏀","🏐","🎨","🧠","🏃","⭐"];
+let formDias = [];
+function abrirForm(fid, idx){
+  const f = FILHOS.find(x => x.id === fid);
+  const a = idx >= 0 ? ATIV[fid][idx] : {nome:"", emoji:"⭐", dias:[], ini:"17:00", fim:"18:00", local:""};
+  formDias = a.dias.slice();
+  document.getElementById("sheet").innerHTML =
+   '<div class="ov" onclick="if(event.target===this)fecharForm()"><div class="sh '+f.cls+'">'+
+   '<h3>'+(idx >= 0 ? "Editar extra" : "Novo extra")+' · '+f.emoji+' '+f.nome+'</h3>'+
+   '<div class="lbl">Atalhos</div><div class="pre">'+PRESETS.map(function(p){
+      return '<button type="button" onclick="setPreset(\''+p[0]+'\',\''+p[1]+'\')">'+p[1]+' '+p[0]+'</button>'; }).join("")+'</div>'+
+   '<label class="lbl">Nome</label><input id="fNome" value="'+esc(a.nome)+'" placeholder="Ex.: Futebol" autocomplete="off">'+
+   '<label class="lbl">Ícone (emoji)</label><input id="fEmoji" value="'+esc(a.emoji)+'" maxlength="4">'+
+   '<div class="pre" style="margin-top:8px">'+EMOJIS.map(function(m){
+      return '<button type="button" onclick="setEmoji(\''+m+'\')">'+m+'</button>'; }).join("")+'</div>'+
+   '<div class="lbl">Dias da semana</div><div class="pre">'+ORDEM_DIAS.map(function(d){
+      return '<button type="button" class="'+(formDias.indexOf(d) >= 0 ? "on" : "")+'" onclick="toggleDia('+d+',this)">'+NOMES3[d]+'</button>'; }).join("")+'</div>'+
+   '<div class="two"><div><label class="lbl">Início</label><input id="fIni" type="time" value="'+a.ini+'"></div>'+
+   '<div><label class="lbl">Fim</label><input id="fFim" type="time" value="'+a.fim+'"></div></div>'+
+   '<label class="lbl">Local (opcional)</label><input id="fLocal" value="'+esc(a.local || "")+'" placeholder="Ex.: Ginásio, casa da explicadora" autocomplete="off">'+
+   '<div class="err" id="fErro"></div>'+
+   '<div class="acts"><button class="pri" onclick="guardarForm(\''+fid+'\','+idx+')">Guardar</button>'+
+   '<button onclick="fecharForm()">Cancelar</button>'+
+   (idx >= 0 ? '<button class="del" onclick="apagarAtiv(\''+fid+'\','+idx+')">Apagar</button>' : "")+'</div></div></div>';
+}
+function fecharForm(){ document.getElementById("sheet").innerHTML = ""; }
+function setPreset(n, e){ document.getElementById("fNome").value = n; document.getElementById("fEmoji").value = e; }
+function setEmoji(e){ document.getElementById("fEmoji").value = e; }
+function toggleDia(d, el){
+  const i = formDias.indexOf(d);
+  if (i >= 0){ formDias.splice(i,1); el.classList.remove("on"); } else { formDias.push(d); el.classList.add("on"); }
+}
+function guardarForm(fid, idx){
+  const nome = document.getElementById("fNome").value.trim();
+  const emoji = document.getElementById("fEmoji").value.trim() || "⭐";
+  const ini = document.getElementById("fIni").value, fim = document.getElementById("fFim").value;
+  const local = document.getElementById("fLocal").value.trim();
+  const erro = document.getElementById("fErro");
+  if (!nome){ erro.textContent = "Falta o nome."; return; }
+  if (!formDias.length){ erro.textContent = "Escolhe pelo menos um dia."; return; }
+  if (!ini || !fim || min(fim) <= min(ini)){ erro.textContent = "A hora de fim tem de ser depois da de início."; return; }
+  const obj = {nome:nome, emoji:emoji, dias:formDias.slice().sort(function(x,y){return x-y;}), ini:ini, fim:fim, local:local};
+  if (idx >= 0) ATIV[fid][idx] = obj; else ATIV[fid].push(obj);
+  guardarAtiv(); fecharForm(); sub[fid] = "extras"; guardar("sub_"+fid, "extras"); render(false);
+}
+function apagarAtiv(fid, idx){
+  if (!confirm("Apagar este extra?")) return;
+  ATIV[fid].splice(idx, 1);
+  guardarAtiv(); fecharForm(); render(false);
 }
 
 function tabs(){
