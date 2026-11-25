@@ -1,0 +1,41 @@
+name: Atualizar mensagem
+
+on:
+  workflow_dispatch:
+    inputs:
+      mensagem:
+        description: Texto da mensagem (vazio = esconder o cartao)
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  atualizar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Escrever mensagem.json
+        env:
+          MSG: ${{ inputs.mensagem }}
+        run: |
+          python3 - <<'PY'
+          import json, os
+          m = os.environ.get("MSG", "").replace("\\n", "\n").strip()
+          dados = {
+              "mensagem": m,
+              "ajuda": "Ficheiro escrito pelo atalho. Pode tambem ser editado a mao: texto entre as aspas de mensagem, vazio para esconder."
+          }
+          with open("mensagem.json", "w", encoding="utf8") as f:
+              json.dump(dados, f, ensure_ascii=False, indent=2)
+              f.write("\n")
+          PY
+
+      - name: Guardar no repositorio
+        run: |
+          git config user.name "Horarios"
+          git config user.email "actions@users.noreply.github.com"
+          git add mensagem.json
+          git diff --cached --quiet || (git commit -m "Atualizar mensagem" && git push)
