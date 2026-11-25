@@ -155,6 +155,12 @@ html,body{margin:0;background:var(--bg);color:var(--ink);
 .acts .pri{background:var(--acc);color:#fff}
 .acts .del{color:#ff453a}
 @media (prefers-color-scheme: dark){.pre button.on,.acts .pri{color:#000}}
+.aviso{border-radius:26px;padding:16px 18px;margin-bottom:14px;background:linear-gradient(135deg,#fff1c9,#ffd7a0);color:#1c1c1e;box-shadow:0 6px 18px rgba(0,0,0,.08);border:2px solid rgba(255,159,10,.55)}
+@media (prefers-color-scheme: dark){.aviso{background:linear-gradient(135deg,#4a3508,#5e3a0a);color:#f5f5f7;border-color:rgba(255,159,10,.5)}}
+.aviso .av-top{font-weight:800;font-size:17px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.aviso .av-tag{font-size:11px;letter-spacing:.6px;background:#ff9f0a;color:#1c1c1e;border-radius:99px;padding:3px 9px;white-space:nowrap}
+.aviso .av-msg{font-size:19px;font-weight:600;margin-top:8px;line-height:1.3;white-space:pre-line;overflow-wrap:anywhere}
+@media (min-width:700px){.aviso .av-msg{font-size:22px}}
 .enter{animation:in .35s ease}
 @keyframes in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 .foot{text-align:center;color:var(--muted);font-size:12px;margin-top:22px}
@@ -445,6 +451,27 @@ function agora(){
 const semDe = f => f.semestres ? semestre : 0;
 
 /* ======================== UI ======================== */
+/* ---- Mensagem para todos (ficheiro mensagem.json no repositório) ---- */
+let AVISO = {mensagem:""};
+(function(){ try{ const v = JSON.parse(ler("aviso","{}")); if (v && typeof v.mensagem === "string") AVISO = {mensagem:v.mensagem}; }catch(e){} })();
+function carregarAviso(){
+  if (!location.protocol.startsWith("http") || !window.fetch) return;
+  fetch("mensagem.json?t="+Date.now(), {cache:"no-store"})
+    .then(function(r){ if (!r.ok) throw 0; return r.json(); })
+    .then(function(j){
+      const m = (j && typeof j.mensagem === "string") ? j.mensagem.trim() : "";
+      if (m !== AVISO.mensagem){
+        AVISO = {mensagem:m}; guardar("aviso", JSON.stringify(AVISO));
+        if (vista === "hoje" && !document.getElementById("sheet").innerHTML) render(false);
+      }
+    }).catch(function(){});   // sem internet (ou ficheiro mal escrito): fica a última mensagem vista
+}
+function avisoHtml(t){
+  if (!AVISO.mensagem) return "";
+  const sauda = t < 12*60 ? "☀️ Bom dia, meninos!" : t < 20*60 ? "🌤️ Boa tarde, meninos!" : "🌙 Boa noite, meninos!";
+  return '<div class="aviso"><div class="av-top"><span>'+sauda+'</span><span class="av-tag">📢 ATENÇÃO</span></div>'+
+         '<div class="av-msg">'+esc(AVISO.mensagem)+'</div></div>';
+}
 const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");
 const NOMES3 = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
 const ORDEM_DIAS = [1,2,3,4,5,6,0];
@@ -513,6 +540,7 @@ function ecraHoje(a){
   let html = '<div class="top"><div><h1>Horários</h1><div class="sub">'+h+' · '+
     (a.sim ? DIAS[a.d] : a.date.toLocaleDateString("pt-PT",{weekday:"long",day:"numeric",month:"long"}))+
     (a.sim ? '<span class="sim">simulação</span>' : '')+'</div></div><div class="clock">'+hhmm(a.t)+'</div></div>';
+  html += avisoHtml(a.t);
   html += '<div class="cards">'+est.map(x => cartao(x.f, x.e, a.t)).join("")+'</div>';
 
   if (a.d >= 1 && a.d <= 5){
@@ -699,7 +727,8 @@ function setSem(n){ semestre = n; guardar("semestre", String(n)); render(false);
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) { navigator.serviceWorker.register("sw.js").catch(function(){}); }
 render(true);
 setInterval(() => render(false), 15000);
-document.addEventListener("visibilitychange", () => { if (!document.hidden) render(false); });
+carregarAviso(); setInterval(carregarAviso, 300000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden){ render(false); carregarAviso(); } });
 </script>
 </body>
 </html>
