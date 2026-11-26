@@ -98,7 +98,7 @@ html,body{margin:0;background:var(--bg);color:var(--ink);
 .hero h2{margin:0;font-size:30px;letter-spacing:-.5px}
 .hero p{margin:4px 0 0;opacity:.7;font-size:15px}
 .seg{display:flex;background:var(--panel);border-radius:14px;padding:3px;margin:0 0 14px;box-shadow:0 1px 6px rgba(0,0,0,.05)}
-.seg button{flex:1;border:0;background:transparent;color:var(--ink);font:inherit;font-weight:700;font-size:15px;padding:9px;border-radius:11px;cursor:pointer}
+.seg button{flex:1;white-space:nowrap;padding-left:2px;padding-right:2px;border:0;background:transparent;color:var(--ink);font:inherit;font-weight:700;font-size:15px;padding:9px;border-radius:11px;cursor:pointer}
 .seg button.on{background:linear-gradient(135deg,var(--a),var(--b))}
 .chips{display:flex;gap:8px;align-items:center;margin:0 2px 14px;font-size:14px;color:var(--muted);flex-wrap:wrap}
 .chips button{border:1px solid var(--line);background:var(--panel);color:var(--ink);font:inherit;font-size:13px;font-weight:700;padding:6px 12px;border-radius:99px;cursor:pointer}
@@ -166,6 +166,31 @@ html,body{margin:0;background:var(--bg);color:var(--ink);
 .aviso .av-tag{font-size:11px;letter-spacing:.6px;background:#ff9f0a;color:#1c1c1e;border-radius:99px;padding:3px 9px;white-space:nowrap}
 .aviso .av-msg{font-size:19px;font-weight:600;margin-top:8px;line-height:1.3;white-space:pre-line;overflow-wrap:anywhere}
 @media (min-width:700px){.aviso .av-msg{font-size:22px}}
+.tst .tr{display:flex;align-items:center;gap:10px;padding:10px 0}
+.tst h3+.tr{padding-top:2px}
+.tst .tr+.tr{border-top:1px solid var(--line)}
+.tr .m{font-size:22px;width:28px;text-align:center}
+.tr .t{flex:1;min-width:0}
+.tr .t b{display:block;font-size:16px;line-height:1.25}
+.tr .t small{display:block;color:var(--muted);font-size:13px;margin-top:1px}
+.tr .e{text-align:right;white-space:nowrap;font-weight:700;font-size:15px;font-variant-numeric:tabular-nums}
+.tr .e small{display:block;font-weight:600;font-size:12px;color:var(--muted)}
+.tr.hot .e small{color:#d98200;font-weight:800}
+.tr.hot .t b{color:#d98200}
+.tchip{margin-top:10px;padding:8px 12px;border-radius:14px;background:rgba(255,159,10,.22);border:1px solid rgba(255,159,10,.5);font-size:14px;font-weight:700}
+.mes{margin:16px 4px 6px;font-size:13px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.escola{border-radius:26px;padding:14px 16px;margin-bottom:14px;background:linear-gradient(135deg,#ffe0e0,#ffc9c9);color:#1c1c1e;border:2px solid rgba(255,69,58,.45);box-shadow:0 6px 18px rgba(0,0,0,.08)}
+@media (prefers-color-scheme: dark){.escola{background:linear-gradient(135deg,#4a1d1d,#5e2424);color:#f5f5f7;border-color:rgba(255,69,58,.5)}}
+.es-top{display:flex;justify-content:space-between;align-items:center;font-weight:800;font-size:17px;margin-bottom:4px}
+.es-tag{background:#ff453a;color:#fff;border-radius:99px;font-size:12px;padding:2px 9px}
+.es-it{padding:9px 0;border-top:1px solid rgba(0,0,0,.1);cursor:pointer}
+.es-it:first-of-type{border-top:0}
+@media (prefers-color-scheme: dark){.es-it{border-top-color:rgba(255,255,255,.14)}}
+.es-h{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.es-h b{font-size:16px;line-height:1.25}
+.es-h small{white-space:nowrap;opacity:.7;font-size:12.5px;font-weight:600}
+.es-t{font-size:14px;margin-top:3px;opacity:.85;white-space:pre-line;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.es-it.open .es-t{display:block;-webkit-line-clamp:unset;overflow:visible}
 .enter{animation:in .35s ease}
 @keyframes in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 .foot{text-align:center;color:var(--muted);font-size:12px;margin-top:22px}
@@ -308,6 +333,37 @@ const FILHOS = [
     5:[ L(1,["PORT","A216"]), L(2,["PORT","A216"]), L(3,["ING","A216"],["FRAN","A216"]),
         L(4,["C-NAT","A216"]), L(6,["MATEM","A216"]), L(7,["E.FIS","Gin 1"]), L(8,["DT.AL","A216"]) ]
  }}
+];
+
+/* ---- Testes, fichas e trabalhos (vindos do calendário Outlook "Familia") ----
+   f = filho (mad/car/joa) · d = data AAAA-MM-DD · k = tipo (teste, ficha, questao, trabalho, leitura)
+   tipo = texto · n = disciplina · t = pormenor (opcional) · h = hora (só quando é fiável) */
+const TESTES = [
+  // João
+  {f:"joa", d:"2026-11-26", k:"teste",    tipo:"Teste",   n:"Português", t:"Compreensão da leitura e gramática"},
+  {f:"joa", d:"2026-12-03", k:"teste",    tipo:"Teste",   n:"Português", t:"Verificação de leitura de Histórias da Terra e do Mar"},
+  {f:"joa", d:"2026-12-07", k:"teste",    tipo:"Teste",   n:"Inglês"},
+  {f:"joa", d:"2026-12-10", k:"teste",    tipo:"Teste",   n:"Português", t:"Educação Literária e Compreensão do oral"},
+  {f:"joa", d:"2026-12-11", k:"ficha",    tipo:"Ficha",   n:"Matemática", t:"Ficha de Avaliação 2"},
+  {f:"joa", d:"2026-12-14", k:"teste",    tipo:"Teste",   n:"Ciências Naturais"},
+  {f:"joa", d:"2026-12-15", k:"teste",    tipo:"Teste",   n:"Francês", t:"Teste de leitura"},
+  {f:"joa", d:"2027-01-07", k:"leitura",  tipo:"Verificação de leitura", n:"Português", t:"O Gato Malhado e a Andorinha Sinhá, de Jorge Amado"},
+  {f:"joa", d:"2027-01-12", k:"teste",    tipo:"Teste",   n:"Francês"},
+  {f:"joa", d:"2027-01-14", k:"teste",    tipo:"Teste",   n:"Físico-Química", t:"2.º Teste"},
+  {f:"joa", d:"2027-01-15", k:"questao",  tipo:"Questão-aula", n:"Matemática", t:"Questão-aula 4"},
+  {f:"joa", d:"2027-01-15", k:"teste",    tipo:"Teste",   n:"Português", t:"Apresentações orais"},
+  // Carolina
+  {f:"car", d:"2026-12-10", k:"ficha",    tipo:"Ficha",   n:"Geografia A", h:"09:10"},
+  {f:"car", d:"2026-12-14", k:"teste",    tipo:"Teste",   n:"Inglês", t:"LEI", h:"15:40"},
+  {f:"car", d:"2026-12-15", k:"questao",  tipo:"Questão", n:"Filosofia", h:"14:40"},
+  {f:"car", d:"2027-01-12", k:"trabalho", tipo:"Relatório", n:"Filosofia", h:"14:40"},
+  {f:"car", d:"2027-01-13", k:"teste",    tipo:"Teste",   n:"Geografia A", h:"10:20"},
+  {f:"car", d:"2027-01-15", k:"teste",    tipo:"Teste",   n:"Matemática A", h:"10:20"},
+  {f:"car", d:"2027-02-04", k:"ficha",    tipo:"Ficha",   n:"Geografia A", h:"09:10"},
+  {f:"car", d:"2027-03-11", k:"teste",    tipo:"Teste",   n:"Geografia A", h:"08:10"},
+  {f:"car", d:"2027-04-22", k:"ficha",    tipo:"Ficha",   n:"Geografia A", h:"09:10"},
+  {f:"car", d:"2027-05-04", k:"trabalho", tipo:"Ensaio",  n:"Filosofia", h:"14:40"},
+  {f:"car", d:"2027-05-20", k:"teste",    tipo:"Teste",   n:"Geografia A", h:"08:10"}
 ];
 
 /* ======================== LÓGICA ======================== */
@@ -516,6 +572,95 @@ const NOMES3 = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
 const ORDEM_DIAS = [1,2,3,4,5,6,0];
 function diasTxt(ds){ return ORDEM_DIAS.filter(d => ds.indexOf(d) >= 0).map(d => NOMES3[d]).join(" · "); }
 
+/* ---- Testes: datas, painel do ecrã Hoje, lista por filho ---- */
+const MESES = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+const EMOJI_K = {teste:"📝", ficha:"📄", questao:"❓", trabalho:"✍️", leitura:"📖"};
+function hojeDia(){   // dia de hoje (para testar: ?data=2026-12-09)
+  const m = /data=(\d{4})-(\d\d)-(\d\d)/.exec(location.search + location.hash);
+  if (m) return Date.UTC(+m[1], +m[2]-1, +m[3]);
+  const n = new Date(); return Date.UTC(n.getFullYear(), n.getMonth(), n.getDate());
+}
+function diasPara(iso){ const p = iso.split("-"); return Math.round((Date.UTC(+p[0], +p[1]-1, +p[2]) - hojeDia())/86400000); }
+function dataTxt(iso){ const p = iso.split("-"), w = new Date(Date.UTC(+p[0], +p[1]-1, +p[2])).getUTCDay(); return NOMES3[w]+" "+(+p[2])+" "+MESES[+p[1]-1]; }
+function quandoTxt(n){ return n === 0 ? "HOJE" : n === 1 ? "amanhã" : "em "+n+" dias"; }
+function testesDe(fid){
+  return TESTES.filter(function(x){ return (!fid || x.f === fid) && diasPara(x.d) >= 0; })
+    .sort(function(a,b){ return a.d < b.d ? -1 : a.d > b.d ? 1 : (a.f < b.f ? -1 : 1); });
+}
+function tituloTeste(x){ return x.tipo+" de "+x.n; }
+function nomeFilho(id){ return FILHOS.find(function(f){ return f.id === id; }); }
+function linhaTeste(x, mostraFilho){
+  const n = diasPara(x.d), f = nomeFilho(x.f);
+  const pormenor = [x.t, x.h ? "às "+x.h : ""].filter(Boolean).join(" · ");
+  return '<div class="tr'+(n <= 1 ? " hot" : "")+'"><span class="m">'+(mostraFilho ? f.emoji : EMOJI_K[x.k] || "📝")+'</span>'+
+    '<span class="t"><b>'+(mostraFilho ? (EMOJI_K[x.k] || "📝")+" " : "")+esc(tituloTeste(x))+'</b>'+(pormenor ? '<small>'+esc(pormenor)+'</small>' : "")+'</span>'+
+    '<span class="e">'+dataTxt(x.d)+'<small>'+quandoTxt(n)+'</small></span></div>';
+}
+function testesPainel(){
+  const todos = testesDe("");
+  if (!todos.length) return "";
+  let lista = todos.filter(function(x){ return diasPara(x.d) <= 21; }).slice(0, 5);
+  if (!lista.length) lista = todos.slice(0, 1);
+  return '<div class="panel tst"><h3>📝 Próximos testes</h3>'+lista.map(function(x){ return linhaTeste(x, true); }).join("")+'</div>';
+}
+function testeChip(fid){
+  const prox = testesDe(fid).filter(function(x){ return diasPara(x.d) <= 3; }).slice(0, 2);
+  return prox.map(function(x){
+    return '<div class="tchip">'+(EMOJI_K[x.k] || "📝")+' '+(function(q){ q = q === "HOJE" ? "Hoje" : q; return q.charAt(0).toUpperCase()+q.slice(1); })(quandoTxt(diasPara(x.d)))+': '+esc(tituloTeste(x))+(x.h ? ' às '+x.h : '')+'</div>';
+  }).join("");
+}
+function testesLista(fid){
+  const lista = testesDe(fid);
+  if (!lista.length) return '<div class="panel">🎉 Sem testes marcados.</div>';
+  let html = '<div class="hint">Testes, fichas e trabalhos marcados no calendário.</div>', mes = "";
+  const NM = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+  lista.forEach(function(x){
+    const p = x.d.split("-"), m = NM[+p[1]-1]+" "+p[0];
+    if (m !== mes){ if (mes) html += '</div>'; html += '<div class="mes">'+m+'</div><div class="panel tst">'; mes = m; }
+    html += linhaTeste(x, false);
+  });
+  return html+'</div>';
+}
+
+/* ---- Avisos da escola (ficheiro avisos.json no repositório; últimas 2 semanas) ----
+   Formato: {"avisos":[{"quem":"car"|"joa"|"todos", "data":"AAAA-MM-DD", "titulo":"...", "texto":"...", "ate":"AAAA-MM-DD (opcional)"}]} */
+let AVISOS_ESC = [];
+(function(){ try{ const v = JSON.parse(ler("avisos_escola","[]")); if (Array.isArray(v)) AVISOS_ESC = v; }catch(e){} })();
+function carregarAvisosEscola(){
+  if (!location.protocol.startsWith("http") || !window.fetch) return;
+  fetch("avisos.json?t="+Date.now(), {cache:"no-store"})
+    .then(function(r){ if (!r.ok) throw 0; return r.json(); })
+    .then(function(j){
+      if (!j || !Array.isArray(j.avisos)) throw 0;
+      const lista = j.avisos.filter(function(a){ return a && typeof a.titulo === "string" && /^\d{4}-\d\d-\d\d$/.test(a.data || ""); });
+      const novo = JSON.stringify(lista);
+      if (novo !== JSON.stringify(AVISOS_ESC)){
+        AVISOS_ESC = lista; guardar("avisos_escola", novo);
+        if ((vista === "hoje" || nomeFilho(vista)) && !document.getElementById("sheet").innerHTML) render(false);
+      }
+    }).catch(function(){});   // sem internet ou ficheiro em falta: ficam os últimos avisos vistos
+}
+function avisosAtivos(fid){
+  return AVISOS_ESC.filter(function(a){
+    const quem = [].concat(a.quem || "todos");
+    const para = !fid || quem.indexOf("todos") >= 0 || quem.indexOf(fid) >= 0;
+    const idade = -diasPara(a.data);                                  // dias desde o aviso
+    return para && idade >= 0 && idade <= 14 && (!a.ate || diasPara(a.ate) >= 0);
+  }).sort(function(x,y){ return x.data < y.data ? 1 : x.data > y.data ? -1 : 0; }).slice(0, 5);
+}
+function haTxt(iso){ const n = -diasPara(iso); return n === 0 ? "hoje" : n === 1 ? "ontem" : "há "+n+" dias"; }
+function avisosEscolaHtml(fid){
+  const lista = avisosAtivos(fid);
+  if (!lista.length) return "";
+  return '<div class="escola"><div class="es-top"><span>🏫 Avisos da escola</span><span class="es-tag">'+lista.length+'</span></div>'+
+    lista.map(function(a){
+      const quem = [].concat(a.quem || "todos");
+      const quemEmoji = quem.indexOf("todos") >= 0 ? "👨‍👩‍👧‍👦" : quem.map(function(q){ const f = nomeFilho(q); return f ? f.emoji : ""; }).join("");
+      return '<div class="es-it" onclick="this.classList.toggle(\'open\')"><div class="es-h"><b>'+quemEmoji+' '+esc(a.titulo)+'</b><small>'+haTxt(a.data)+'</small></div>'+
+        (a.texto ? '<div class="es-t">'+esc(a.texto)+'</div>' : '')+'</div>';
+    }).join("")+'</div>';
+}
+
 const PILL = {
   agora:["🟢 AGORA","live"], ativ:["🟢 AGORA","live"], intervalo:["☕ Intervalo",""], almoco:["🍴 A almoçar",""],
   furo:["🕐 Furo",""], antes:["⏰ Ainda não começou",""], acabou:["🏠 Por hoje acabou!",""],
@@ -570,7 +715,7 @@ function cartao(f, e, t){
   return '<div class="card '+f.cls+'" onclick="ir(\''+f.id+'\')">'+
     '<div class="who"><span>'+f.emoji+' '+f.nome+'</span><small>'+f.escola.replace("Universidade ","").replace("Escola Secundária de ","").replace("Escola ","")+'</small></div>'+
     '<div class="pill '+p[1]+'">'+(p[1] ? '<i class="dot"></i>AGORA' : p[0])+'</div>'+
-    corpo+(rodape ? '<div class="next">'+rodape+'</div>' : "")+'</div>';
+    corpo+(rodape ? '<div class="next">'+rodape+'</div>' : "")+testeChip(f.id)+'</div>';
 }
 
 function ecraHoje(a){
@@ -580,7 +725,9 @@ function ecraHoje(a){
     (a.sim ? DIAS[a.d] : a.date.toLocaleDateString("pt-PT",{weekday:"long",day:"numeric",month:"long"}))+
     (a.sim ? '<span class="sim">simulação</span>' : '')+'</div></div><div class="clockbox"><div class="clock">'+hhmm(a.t)+'</div>'+meteoHtml()+'</div></div>';
   html += avisoHtml(a.t);
+  html += avisosEscolaHtml("");
   html += '<div class="cards">'+est.map(x => cartao(x.f, x.e, a.t)).join("")+'</div>';
+  html += testesPainel();
 
   if (a.d >= 1 && a.d <= 5){
     const com = est.filter(x => x.e.fimHoje).sort((x,y) => min(x.e.fimHoje) - min(y.e.fimHoje));
@@ -615,10 +762,10 @@ function ecraFilho(f, a){
   const sb = sub[f.id];
   let html = '<div class="hero '+f.cls+'"><h2>'+f.emoji+' '+f.nome+'</h2><p>'+f.ano+' · '+f.escola+'</p></div>';
   html += '<div class="seg '+f.cls+'">'+
-    [["hoje","Hoje"],["semana","Semana"],["extras","Extras"+(lista.length ? " · "+lista.length : "")]].map(function(x){
+    [["hoje","Hoje"],["semana","Semana"],["extras","Extras"+(lista.length ? " · "+lista.length : "")],["testes","Testes"+(testesDe(f.id).length ? " · "+testesDe(f.id).length : "")]].map(function(x){
       return '<button class="'+(sb===x[0]?"on":"")+'" onclick="setSub(\''+f.id+'\',\''+x[0]+'\')">'+x[1]+'</button>';
     }).join("")+'</div>';
-  if (f.semestres && sb !== "extras"){
+  if (f.semestres && sb !== "extras" && sb !== "testes"){
     html += '<div class="chips '+f.cls+'">Semestre:'+
       [[0,"Ambos"],[1,"1.º sem"],[2,"2.º sem"]].map(function(x){
         return '<button class="'+(semestre===x[0]?"on":"")+'" onclick="setSem('+x[0]+')">'+x[1]+'</button>';
@@ -626,6 +773,7 @@ function ecraFilho(f, a){
   }
 
   if (sb === "hoje"){
+    html += avisosEscolaHtml(f.id);
     html += '<div class="duo"><div>'+cartao(f, e, a.t)+'</div><div>';
     const itens = itensDoDia(f, dia, sm, lista);
     html += '<div class="hint">'+(eHoje ? "O dia de hoje" : "Segunda-feira, para ir espreitando")+' · '+DIAS[dia]+'</div><div class="tl '+f.cls+'">';
@@ -677,6 +825,8 @@ function ecraFilho(f, a){
       html += '</div></div>';
     }
     html += '</div>';
+  } else if (sb === "testes"){
+    html += testesLista(f.id);
   } else {
     html += '<div class="hint">Coisas que se repetem todas as semanas: explicações, desporto, música…</div>';
     if (!lista.length) html += '<div class="panel">Ainda não há extras. ⚽ Futebol? 📚 Explicação? 🤸 Ginástica?</div>';
@@ -768,7 +918,8 @@ render(true);
 setInterval(() => render(false), 15000);
 carregarAviso(); setInterval(carregarAviso, 300000);
 carregarMeteo(); setInterval(carregarMeteo, 1800000);
-document.addEventListener("visibilitychange", () => { if (!document.hidden){ render(false); carregarAviso(); carregarMeteo(); } });
+carregarAvisosEscola(); setInterval(carregarAvisosEscola, 300000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden){ render(false); carregarAviso(); carregarMeteo(); carregarAvisosEscola(); } });
 </script>
 </body>
 </html>
