@@ -1,4 +1,11 @@
 {
   "ajuda": "Avisos da escola das ultimas 2 semanas. quem: car, joa ou todos. data: AAAA-MM-DD. ate (opcional): data a partir da qual deixa de aparecer.",
-  "avisos": []
+  "avisos": [
+    {
+      "quem": "joa",
+      "data": "2026-11-26",
+      "titulo": "Mensagem da Diretora de Turma",
+      "texto": "Participações de ocorrência da turma (ficheiros de 23 e 24 de novembro). A Diretora de Turma pede especial atenção. Ver o email."
+    }
+  ]
 }
