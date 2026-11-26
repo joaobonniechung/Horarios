@@ -43,6 +43,11 @@ html,body{margin:0;background:var(--bg);color:var(--ink);
 .top{display:flex;justify-content:space-between;align-items:flex-end;margin:6px 4px 16px}
 .top h1{margin:0;font-size:34px;letter-spacing:-.5px}
 .top .sub{color:var(--muted);font-size:15px;margin-top:2px}
+.clockbox{text-align:right}
+.wx{margin-top:2px;line-height:1.25;font-size:15px;white-space:nowrap}
+.wx b{font-size:17px;font-weight:800}
+.wx span{display:block;font-size:12.5px;color:var(--muted)}
+@media (min-width:700px){.wx{font-size:17px}.wx b{font-size:20px}.wx span{font-size:14px}}
 .clock{font-size:30px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.5px}
 .sim{display:inline-block;font-size:12px;background:#ff9f0a;color:#000;border-radius:8px;padding:2px 6px;margin-left:6px;vertical-align:middle}
 
@@ -266,7 +271,8 @@ const FILHOS = [
         M("14:00","15:00","Saúde Pública"),
         M("15:00","17:30","Introdução à Profissão") ],
     2:[ M("08:00","09:30","Biologia Celular e Molecular"),
-        M("09:30","11:00","Biologia Celular e Molecular") ],
+        M("09:30","11:00","Biologia Celular e Molecular"),
+        M("11:00","12:00","História e Sociologia da Alimentação") ],
     3:[],
     4:[ M("11:30","14:30","Química dos Alimentos"),
         ALMOCO("14:30","16:00"),
@@ -419,11 +425,13 @@ const EXTRAS_INICIAIS = {
         {nome:"Futebol",  emoji:"⚽", dias:[2],     ini:"18:30", fim:"19:45", local:"Clube Futebol Benfica"},
         {nome:"Futebol",  emoji:"⚽", dias:[4],     ini:"19:15", fim:"20:30", local:"Clube Futebol Benfica"},
         {nome:"Futebol",  emoji:"⚽", dias:[5],     ini:"19:00", fim:"20:30", local:"Clube Futebol Benfica"},
-        {nome:"Explicação",emoji:"📚", dias:[3],     ini:"16:00", fim:"17:00", local:""} ],
+        {nome:"Explicação",emoji:"📚", dias:[3],     ini:"17:00", fim:"18:00", local:""} ],
   car:[ {nome:"Ginástica",emoji:"🤸", dias:[1,3,5], ini:"17:00", fim:"18:30", local:""} ]
 };
-const VERSAO_EXTRAS = "4";
+const VERSAO_EXTRAS = "5";
 if (ler("extras_iniciais","") !== VERSAO_EXTRAS){
+  // a explicação do João (quarta) passou das 16:00–17:00 para as 17:00–18:00
+  ATIV.joa = ATIV.joa.filter(function(y){ return !(y.nome === "Explicação" && y.dias.join() === "3" && y.ini === "16:00" && y.fim === "17:00"); });
   // a explicação da Carolina (terça) foi retirada
   ATIV.car = ATIV.car.filter(function(y){ return !(y.nome === "Explicação" && y.dias.join() === "2" && ((y.ini === "14:00" && y.fim === "15:00") || (y.ini === "15:00" && y.fim === "16:00"))); });
   // versão 1 tinha o futebol igual nos 3 dias: é substituída pelos horários certos
@@ -451,6 +459,40 @@ const semDe = f => f.semestres ? semestre : 0;
 /* ---- Mensagem para todos (ficheiro mensagem.json no repositório) ---- */
 let AVISO = {mensagem:""};
 (function(){ try{ const v = JSON.parse(ler("aviso","{}")); if (v && typeof v.mensagem === "string") AVISO = {mensagem:v.mensagem}; }catch(e){} })();
+/* ---- Tempo em Benfica, Lisboa (Open-Meteo: gratuito, sem conta nem chave) ---- */
+const METEO_URL = "https://api.open-meteo.com/v1/forecast?latitude=38.7487&longitude=-9.1999"+
+  "&current=temperature_2m,apparent_temperature,weather_code,precipitation"+
+  "&daily=precipitation_probability_max&forecast_days=1&timezone=Europe%2FLisbon";
+let METEO = null;   // {t:temperatura, code:código, chuva:true/false, quando:milissegundos}
+(function(){ try{ const v = JSON.parse(ler("meteo","null")); if (v && typeof v.t === "number") METEO = v; }catch(e){} })();
+function carregarMeteo(){
+  if (!location.protocol.startsWith("http") || !window.fetch) return;
+  fetch(METEO_URL, {cache:"no-store"})
+    .then(function(r){ if (!r.ok) throw 0; return r.json(); })
+    .then(function(j){
+      const c = j && j.current; if (!c || typeof c.temperature_2m !== "number") throw 0;
+      const prob = (j.daily && j.daily.precipitation_probability_max && j.daily.precipitation_probability_max[0]) || 0;
+      const code = c.weather_code;
+      const chuvaCode = (code >= 51 && code <= 67) || (code >= 80 && code <= 82) || code >= 95;
+      METEO = {t:Math.round(c.temperature_2m), sente:Math.round(c.apparent_temperature), code:code,
+               chuva: chuvaCode || c.precipitation > 0 || prob >= 50, quando:Date.now()};
+      guardar("meteo", JSON.stringify(METEO));
+      if (vista === "hoje" && !document.getElementById("sheet").innerHTML) render(false);
+    }).catch(function(){});   // sem internet: fica o último valor (se for recente)
+}
+function emojiTempo(c){
+  if (c === 0) return "☀️"; if (c === 1) return "🌤️"; if (c === 2) return "⛅"; if (c === 3) return "☁️";
+  if (c === 45 || c === 48) return "🌫️"; if (c >= 51 && c <= 57) return "🌦️"; if (c >= 61 && c <= 67) return "🌧️";
+  if (c >= 71 && c <= 77) return "🌨️"; if (c >= 80 && c <= 82) return "🌦️"; if (c >= 85 && c <= 86) return "🌨️";
+  if (c >= 95) return "⛈️"; return "🌡️";
+}
+function meteoHtml(){
+  if (!METEO || Date.now() - METEO.quando > 3*3600*1000) return "";   // dados com mais de 3 h não se mostram
+  const s = METEO.sente;
+  const roupa = s <= 10 ? "🧥 casaco grosso" : s <= 16 ? "🧥 casaco" : s <= 21 ? "👕 manga comprida" : "😎 t-shirt";
+  return '<div class="wx"><b>'+emojiTempo(METEO.code)+' '+METEO.t+'°</b><span>'+roupa+(METEO.chuva ? ' · ☔' : '')+'</span></div>';
+}
+
 function carregarAviso(){
   if (!location.protocol.startsWith("http") || !window.fetch) return;
   fetch("mensagem.json?t="+Date.now(), {cache:"no-store"})
@@ -536,7 +578,7 @@ function ecraHoje(a){
   const h = a.t < 12*60 ? "Bom dia ☀️" : a.t < 20*60 ? "Boa tarde 🌤️" : "Boa noite 🌙";
   let html = '<div class="top"><div><h1>Horários</h1><div class="sub">'+h+' · '+
     (a.sim ? DIAS[a.d] : a.date.toLocaleDateString("pt-PT",{weekday:"long",day:"numeric",month:"long"}))+
-    (a.sim ? '<span class="sim">simulação</span>' : '')+'</div></div><div class="clock">'+hhmm(a.t)+'</div></div>';
+    (a.sim ? '<span class="sim">simulação</span>' : '')+'</div></div><div class="clockbox"><div class="clock">'+hhmm(a.t)+'</div>'+meteoHtml()+'</div></div>';
   html += avisoHtml(a.t);
   html += '<div class="cards">'+est.map(x => cartao(x.f, x.e, a.t)).join("")+'</div>';
 
@@ -725,7 +767,8 @@ if ("serviceWorker" in navigator && location.protocol.startsWith("http")) { navi
 render(true);
 setInterval(() => render(false), 15000);
 carregarAviso(); setInterval(carregarAviso, 300000);
-document.addEventListener("visibilitychange", () => { if (!document.hidden){ render(false); carregarAviso(); } });
+carregarMeteo(); setInterval(carregarMeteo, 1800000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden){ render(false); carregarAviso(); carregarMeteo(); } });
 </script>
 </body>
 </html>
