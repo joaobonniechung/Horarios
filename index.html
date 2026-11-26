@@ -749,7 +749,7 @@ function ecraHoje(a){
           (l ? l.ini : "—")+'</span></div>';
       }).join("")+'</div>';
   }
-  html += '<div class="foot">Toca num cartão para ver o horário completo ✨</div>';
+  html += '<div class="foot">Toca num cartão para ver o horário completo ✨ · v12</div>';
   return html;
 }
 
@@ -913,7 +913,17 @@ function ir(id){ vista = id; window.scrollTo(0,0); render(true); }
 function setSub(id, v){ sub[id] = v; guardar("sub_"+id, v); render(true); }
 function setSem(n){ semestre = n; guardar("semestre", String(n)); render(false); }
 
-if ("serviceWorker" in navigator && location.protocol.startsWith("http")) { navigator.serviceWorker.register("sw.js").catch(function(){}); }
+if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+  const tinhaSW = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener("controllerchange", function(){
+    if (tinhaSW && !document.getElementById("sheet").innerHTML) location.reload();   // nova versão → recarrega sozinho
+  });
+  navigator.serviceWorker.register("sw.js", {updateViaCache:"none"}).then(function(reg){
+    const upd = function(){ try{ reg.update(); }catch(e){} };
+    setInterval(upd, 30*60*1000);
+    document.addEventListener("visibilitychange", function(){ if (!document.hidden) upd(); });
+  }).catch(function(){});
+}
 render(true);
 setInterval(() => render(false), 15000);
 carregarAviso(); setInterval(carregarAviso, 300000);
